@@ -1,0 +1,187 @@
+import * as cdk from 'aws-cdk-lib';
+import { Construct } from 'constructs';
+import * as s3 from 'aws-cdk-lib/aws-s3';
+import * as cloudfront from 'aws-cdk-lib/aws-cloudfront';
+import * as origins from 'aws-cdk-lib/aws-cloudfront-origins';
+import * as acm from 'aws-cdk-lib/aws-certificatemanager';
+import * as route53 from 'aws-cdk-lib/aws-route53';
+import * as targets from 'aws-cdk-lib/aws-route53-targets';
+import * as iam from 'aws-cdk-lib/aws-iam';
+import * as ssm from 'aws-cdk-lib/aws-ssm';
+import * as wafv2 from 'aws-cdk-lib/aws-wafv2';
+import { HOSTED_ZONE_ID, ZONE_NAME, GITHUB_REPO, SiteEnv } from './site-config';
+
+export interface SiteStackProps extends cdk.StackProps {
+  site: SiteEnv;
+  oidcProvider: iam.IOpenIdConnectProvider;
+}
+
+/**
+ * One blog environment: private S3 bucket behind a CloudFront distribution (Origin
+ * Access Control), an in-region ACM certificate, Route53 alias records, a
+ * directory-index CloudFront Function, and a branch-scoped OIDC role for content deploys.
+ */
+export class SiteStack extends cdk.Stack {
+  constructor(scope: Construct, id: string, props: SiteStackProps) {
+    super(scope, id, props);
+    const { site, oidcProvider } = props;
+    const isProd = site.envName === 'prod';
+
+    const zone = route53.HostedZone.fromHostedZoneAttributes(this, 'Zone', {
+      hostedZoneId: HOSTED_ZONE_ID,
+      zoneName: ZONE_NAME,
+    });
+
+    const certificate = new acm.Certificate(this, 'Certificate', {
+      domainName: site.domainName,
+      validation: acm.CertificateValidation.fromDns(zone),
+    });
+
+    const bucket = new s3.Bucket(this, 'SiteBucket', {
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      encryption: s3.BucketEncryption.S3_MANAGED,
+      enforceSSL: true,
+      removalPolicy: isProd ? cdk.RemovalPolicy.RETAIN : cdk.RemovalPolicy.DESTROY,
+      autoDeleteObjects: !isProd,
+    });
+
+    const rewriteFunction = new cloudfront.Function(this, 'RewriteFunction', {
+      runtime: cloudfront.FunctionRuntime.JS_2_0,
+      code: cloudfront.FunctionCode.fromInline(DIRECTORY_INDEX_FUNCTION),
+    });
+
+    const webAcl = new wafv2.CfnWebACL(this, 'WebAcl', {
+      defaultAction: { allow: {} },
+      scope: 'CLOUDFRONT',
+      visibilityConfig: {
+        cloudWatchMetricsEnabled: true,
+        metricName: `blog-site-${site.envName}`,
+        sampledRequestsEnabled: true,
+      },
+      rules: [
+        {
+          name: 'SiteWideRateLimit',
+          priority: 0,
+          action: { block: {} },
+          statement: {
+            rateBasedStatement: {
+              aggregateKeyType: 'IP',
+              evaluationWindowSec: 600,
+              limit: 1000,
+            },
+          },
+          visibilityConfig: {
+            cloudWatchMetricsEnabled: true,
+            metricName: `blog-site-rate-${site.envName}`,
+            sampledRequestsEnabled: true,
+          },
+        },
+        {
+          name: 'AmazonIpReputationList',
+          priority: 1,
+          overrideAction: { none: {} },
+          statement: {
+            managedRuleGroupStatement: {
+              vendorName: 'AWS',
+              name: 'AWSManagedRulesAmazonIpReputationList',
+            },
+          },
+          visibilityConfig: {
+            cloudWatchMetricsEnabled: true,
+            metricName: `blog-ip-reputation-${site.envName}`,
+            sampledRequestsEnabled: true,
+          },
+        },
+      ],
+    });
+
+    const distribution = new cloudfront.Distribution(this, 'Distribution', {
+      domainNames: [site.domainName],
+      certificate,
+      webAclId: webAcl.attrArn,
+      defaultRootObject: 'index.html',
+      priceClass: cloudfront.PriceClass.PRICE_CLASS_100,
+      defaultBehavior: {
+        origin: origins.S3BucketOrigin.withOriginAccessControl(bucket),
+        viewerProtocolPolicy: cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+        allowedMethods: cloudfront.AllowedMethods.ALLOW_GET_HEAD,
+        cachePolicy: cloudfront.CachePolicy.CACHING_OPTIMIZED,
+        compress: true,
+        functionAssociations: [
+          { function: rewriteFunction, eventType: cloudfront.FunctionEventType.VIEWER_REQUEST },
+        ],
+      },
+      errorResponses: [
+        { httpStatus: 403, responseHttpStatus: 404, responsePagePath: '/404.html', ttl: cdk.Duration.minutes(5) },
+        { httpStatus: 404, responseHttpStatus: 404, responsePagePath: '/404.html', ttl: cdk.Duration.minutes(5) },
+      ],
+    });
+
+    const aliasTarget = route53.RecordTarget.fromAlias(new targets.CloudFrontTarget(distribution));
+    new route53.ARecord(this, 'AliasA', { zone, recordName: site.domainName, target: aliasTarget });
+    new route53.AaaaRecord(this, 'AliasAAAA', { zone, recordName: site.domainName, target: aliasTarget });
+
+    // Branch-scoped CI role: only this env's branch can assume it, and it can only touch
+    // this env's bucket, distribution, and SSM parameters.
+    const contentRole = new iam.Role(this, 'ContentDeployRole', {
+      roleName: `blog-content-${site.envName}`,
+      description: `GitHub Actions role to deploy ${site.envName} blog content`,
+      assumedBy: new iam.OpenIdConnectPrincipal(oidcProvider, {
+        StringEquals: {
+          'token.actions.githubusercontent.com:aud': 'sts.amazonaws.com',
+          'token.actions.githubusercontent.com:sub': `repo:${GITHUB_REPO}:ref:refs/heads/${site.branch}`,
+        },
+      }),
+    });
+    bucket.grantReadWrite(contentRole);
+    contentRole.addToPolicy(
+      new iam.PolicyStatement({
+        actions: ['cloudfront:CreateInvalidation'],
+        resources: [`arn:aws:cloudfront::${this.account}:distribution/${distribution.distributionId}`],
+      }),
+    );
+    contentRole.addToPolicy(
+      new iam.PolicyStatement({
+        actions: ['ssm:GetParameter', 'ssm:GetParameters'],
+        resources: [`arn:aws:ssm:${this.region}:${this.account}:parameter/blog/${site.envName}/*`],
+      }),
+    );
+
+    new ssm.StringParameter(this, 'BucketNameParam', {
+      parameterName: `/blog/${site.envName}/bucket-name`,
+      stringValue: bucket.bucketName,
+    });
+    new ssm.StringParameter(this, 'DistributionIdParam', {
+      parameterName: `/blog/${site.envName}/distribution-id`,
+      stringValue: distribution.distributionId,
+    });
+
+    new cdk.CfnOutput(this, 'SiteUrl', { value: `https://${site.domainName}` });
+    new cdk.CfnOutput(this, 'BucketName', { value: bucket.bucketName });
+    new cdk.CfnOutput(this, 'DistributionId', { value: distribution.distributionId });
+    new cdk.CfnOutput(this, 'ContentRoleArn', { value: contentRole.roleArn });
+  }
+}
+
+/**
+ * CloudFront viewer-request function (cloudfront-js-2.0, ES5.1-safe). With OAC the S3 REST
+ * origin does no index resolution, so we map Hugo's pretty (directory-style) URLs to their
+ * emitted objects:
+ *  - trailing slash (home, section or page index, e.g. "/", "/posts/", "/posts/welcome/")
+ *    -> "<uri>index.html"
+ *  - extensionless, no slash (same page without the trailing slash, e.g. "/posts/welcome")
+ *    -> "<uri>/index.html"
+ * Hugo's default pretty URLs emit every page as "<path>/index.html", so extensionless paths
+ * resolve to "<uri>/index.html". Real files with extensions (404.html, index.xml, index.json,
+ * sitemap.xml, hashed assets) already have a dot after the last slash and pass through.
+ */
+const DIRECTORY_INDEX_FUNCTION = `function handler(event) {
+  var request = event.request;
+  var uri = request.uri;
+  if (uri.charAt(uri.length - 1) === '/') {
+    request.uri = uri + 'index.html';
+  } else if (uri.lastIndexOf('.') < uri.lastIndexOf('/')) {
+    request.uri = uri + '/index.html';
+  }
+  return request;
+}`;

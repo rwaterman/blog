@@ -46,8 +46,39 @@ Site config lives in `config/_default/` (Congo's recommended split layout):
 
 ## Deployment
 
-Not yet wired up. The intended path mirrors the sibling `website/` and `notes/` repos:
-AWS CDK (`SharedStack` importing the account OIDC provider + `SiteStack` with
-S3 + CloudFront/OAC + ACM + Route53) deployed by GitHub Actions via OIDC on push to
-`develop`, served at `blog.rickgwaterman.com`. Note that, unlike those Node-based builds,
-this site's CI build step needs Go plus a network fetch of the Hugo Module.
+Mirrors the sibling `website/` and `notes/` repos. Infrastructure is AWS CDK in `infra/`:
+
+- **`BlogShared`** — imports the account-wide GitHub Actions OIDC provider (created by
+  `website`; one per account) and the `blog-infra-deploy` role CI uses for `cdk deploy`.
+- **`BlogSiteDev`** — one environment: a private S3 bucket behind a CloudFront
+  distribution (OAC), an in-region ACM certificate, Route53 alias records, a WAF WebACL,
+  a directory-index CloudFront Function, and the branch-scoped `blog-content-dev` role.
+
+Served at **`blog-dev.rickgwaterman.com`**. Two GitHub Actions workflows run via OIDC
+(no long-lived AWS keys); both authenticate with the repo secrets `AWS_ACCOUNT_ID` and
+`HOSTED_ZONE_ID`:
+
+- **`infra.yml`** — `cdk deploy` on pushes touching `infra/**`.
+- **`deploy.yml`** — on every push to `develop`: installs Go + Hugo extended, fetches the
+  Congo Hugo Module, builds with `--baseURL https://blog-dev.rickgwaterman.com/`, syncs
+  `public/` to S3, and invalidates CloudFront.
+
+Unlike the Node-based siblings, the build step needs Go plus a network fetch of the Hugo
+Module; `go.mod`/`go.sum` pin the theme so CI is reproducible.
+
+### First-time / local infra deploy
+
+The `blog-infra-deploy` role is created by `BlogShared`, so the very first deploy is run
+locally with admin credentials (CI can assume the role only after it exists):
+
+```sh
+cd infra && npm ci
+AWS_ACCOUNT_ID=<account> HOSTED_ZONE_ID=<zoneId> \
+  npx cdk deploy BlogShared BlogSiteDev --require-approval never
+```
+
+### Adding prod (`blog.rickgwaterman.com`)
+
+Prod is intentionally not stood up yet. To add it: append a `prod` entry to `SITE_ENVS`
+in `infra/lib/site-config.ts` and a matching `prod` case to `deploy.yml`'s
+"Resolve environment" step, then deploy.
