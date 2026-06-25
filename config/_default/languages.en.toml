@@ -1,0 +1,21 @@
+locale = "en-US"
+label = "English"
+direction = "ltr"
+weight = 1
+
+title = "Rick Waterman"
+
+[params]
+  dateFormat = "2 January 2006"
+
+  mainSections = ["posts"]
+  description = "Notes and writing by Rick Waterman."
+
+[params.author]
+  name = "Rick Waterman"
+  # image = "img/author.jpg"
+  headline = "Lead Cloud Architect"
+  bio = "Backend engineering, AWS serverless, and platform engineering."
+  links = [
+    { github = "https://github.com/rwaterman" },
+  ]

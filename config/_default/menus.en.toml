@@ -1,0 +1,33 @@
+# -- Main Menu --
+# Displayed in the header. Ordered by weight (low to high).
+
+[[main]]
+  name = "Posts"
+  pageRef = "posts"
+  weight = 10
+
+[[main]]
+  name = "Tags"
+  pageRef = "tags"
+  weight = 20
+
+[[main]]
+  name = "About"
+  pageRef = "about"
+  weight = 30
+
+[[main]]
+  identifier = "search"
+  weight = 99
+  [main.params]
+    action = "search"
+
+# -- Footer Menu --
+
+[[footer]]
+  name = "RSS"
+  url = "/index.xml"
+  weight = 10
+  [footer.params]
+    icon = "rss"
+    target = "_blank"
