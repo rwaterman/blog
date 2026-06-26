@@ -8,7 +8,6 @@ import * as route53 from 'aws-cdk-lib/aws-route53';
 import * as targets from 'aws-cdk-lib/aws-route53-targets';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
-import * as wafv2 from 'aws-cdk-lib/aws-wafv2';
 import { HOSTED_ZONE_ID, ZONE_NAME, GITHUB_REPO, SiteEnv } from './site-config';
 
 export interface SiteStackProps extends cdk.StackProps {
@@ -50,55 +49,19 @@ export class SiteStack extends cdk.Stack {
       code: cloudfront.FunctionCode.fromInline(DIRECTORY_INDEX_FUNCTION),
     });
 
-    const webAcl = new wafv2.CfnWebACL(this, 'WebAcl', {
-      defaultAction: { allow: {} },
-      scope: 'CLOUDFRONT',
-      visibilityConfig: {
-        cloudWatchMetricsEnabled: true,
-        metricName: `blog-site-${site.envName}`,
-        sampledRequestsEnabled: true,
-      },
-      rules: [
-        {
-          name: 'SiteWideRateLimit',
-          priority: 0,
-          action: { block: {} },
-          statement: {
-            rateBasedStatement: {
-              aggregateKeyType: 'IP',
-              evaluationWindowSec: 600,
-              limit: 1000,
-            },
-          },
-          visibilityConfig: {
-            cloudWatchMetricsEnabled: true,
-            metricName: `blog-site-rate-${site.envName}`,
-            sampledRequestsEnabled: true,
-          },
-        },
-        {
-          name: 'AmazonIpReputationList',
-          priority: 1,
-          overrideAction: { none: {} },
-          statement: {
-            managedRuleGroupStatement: {
-              vendorName: 'AWS',
-              name: 'AWSManagedRulesAmazonIpReputationList',
-            },
-          },
-          visibilityConfig: {
-            cloudWatchMetricsEnabled: true,
-            metricName: `blog-ip-reputation-${site.envName}`,
-            sampledRequestsEnabled: true,
-          },
-        },
-      ],
-    });
+    // Shared "blanket" CloudFront WebACL, owned by the website repo's SharedStack and
+    // published to SSM there. Read its ARN at deploy time and associate this distribution
+    // with it instead of defining a per-repo WebACL. Requires the website WebsiteShared
+    // stack to have deployed first so the parameter exists.
+    const sharedWebAclArn = ssm.StringParameter.valueForStringParameter(
+      this,
+      '/website/shared/cloudfront-webacl-arn',
+    );
 
     const distribution = new cloudfront.Distribution(this, 'Distribution', {
       domainNames: [site.domainName],
       certificate,
-      webAclId: webAcl.attrArn,
+      webAclId: sharedWebAclArn,
       defaultRootObject: 'index.html',
       priceClass: cloudfront.PriceClass.PRICE_CLASS_100,
       defaultBehavior: {
