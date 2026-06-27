@@ -25,8 +25,21 @@ hugo new content posts/my-first-post/index.md
 ```
 
 Edit the front matter (`draft`, `tags`, `categories`, `summary`) and set `draft = false`
-when ready. The `content/posts/welcome/` folder is a placeholder you can overwrite with
-your first real article.
+when ready.
+
+### AI writing-assistance disclosure
+
+To add a badge near the top of an article noting that the ideas are your own but that AI
+assisted with the writing, drop the `ai-disclosure` shortcode in as the first line of the
+post body:
+
+```md
+{{< ai-disclosure >}}
+```
+
+It renders a lightbulb-icon callout (styled to match Congo's `alert`). Pass a string to
+override the default message, e.g. `{{< ai-disclosure "**My own ideas.** Drafted with AI help." >}}`.
+The shortcode lives in `layouts/_shortcodes/ai-disclosure.html`.
 
 ## Build
 

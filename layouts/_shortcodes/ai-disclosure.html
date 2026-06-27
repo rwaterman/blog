@@ -1,0 +1,26 @@
+{{- /*
+  AI writing-assistance disclosure badge.
+
+  Place near the top of an article's content to signal that the ideas are the
+  author's own but that AI tooling assisted with drafting/editing:
+
+    {{< ai-disclosure >}}
+
+  Optionally override the message (Markdown is supported):
+
+    {{< ai-disclosure "**My own ideas.** Drafted with AI help." >}}
+
+  Styling intentionally mirrors the theme's built-in `alert` shortcode so it
+  stays consistent with Congo and only uses classes present in the compiled
+  CSS bundle (the theme ships pre-built Tailwind; new utility classes won't
+  exist at build time).
+*/ -}}
+{{- $message := .Get 0 | default "**The ideas and opinions in this article are my own.** I used AI tools to assist with drafting and editing." -}}
+<div class="mb-6 flex items-center rounded-md bg-primary-100 px-4 py-3 text-sm dark:bg-primary-900">
+  <span class="pe-3 text-primary-500 dark:text-primary-400">
+    {{ partial "icon.html" "lightbulb" }}
+  </span>
+  <span class="text-neutral-700 dark:text-neutral-300">
+    {{- $message | markdownify -}}
+  </span>
+</div>
