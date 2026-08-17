@@ -31,3 +31,8 @@
   [footer.params]
     icon = "rss"
     target = "_blank"
+
+[[footer]]
+  name = "AI disclosure"
+  url = "/about/#ai-disclosure"
+  weight = 20

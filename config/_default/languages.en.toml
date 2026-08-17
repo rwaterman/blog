@@ -15,7 +15,7 @@ title = "Rick Waterman"
   name = "Rick Waterman"
   # image = "img/author.jpg"
   headline = "Lead Cloud Architect"
-  bio = "Backend engineering, AWS serverless, and platform engineering."
+  bio = "Lead Cloud Architect — AWS serverless, platform engineering, and data systems. Vancouver, WA."
   links = [
     { github = "https://github.com/rwaterman" },
   ]
