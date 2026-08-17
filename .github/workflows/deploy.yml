@@ -66,6 +66,10 @@ jobs:
           SITE_HOST: ${{ steps.target.outputs.host }}
         run: hugo --gc --minify --baseURL "https://${SITE_HOST}/"
 
+      - name: Block indexing on dev
+        if: steps.target.outputs.name == 'dev'
+        run: printf 'User-agent: *\nDisallow: /\n' > public/robots.txt
+
       - uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/blog-content-${{ steps.target.outputs.name }}
