@@ -3,13 +3,13 @@ label = "English"
 direction = "ltr"
 weight = 1
 
-title = "Rick Waterman"
+title = "Blog - AI Blog Platform"
 
 [params]
   dateFormat = "2 January 2006"
 
   mainSections = ["posts"]
-  description = "Notes and writing by Rick Waterman."
+  description = "AI-drafted articles built from Rick Waterman's own ideas, opinions, and experience as a Lead Cloud Architect."
 
 [params.author]
   name = "Rick Waterman"

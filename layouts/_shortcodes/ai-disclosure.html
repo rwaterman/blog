@@ -15,7 +15,7 @@
   CSS bundle (the theme ships pre-built Tailwind; new utility classes won't
   exist at build time).
 */ -}}
-{{- $message := .Get 0 | default "**The ideas and opinions in this article are my own.** I used AI tools to assist with drafting and editing." -}}
+{{- $message := .Get 0 | default "**AI-written from my ideas.** The thesis, opinions, and experience in this article are my own; an AI model drafted and edited the text, and I reviewed what shipped." -}}
 <div class="mb-6 flex items-center rounded-md bg-primary-100 px-4 py-3 text-sm dark:bg-primary-900">
   <span class="pe-3 text-primary-500 dark:text-primary-400">
     {{ partial "icon.html" "lightbulb" }}
