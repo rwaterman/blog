@@ -1,5 +1,5 @@
 +++
-title = "Blog (Generative AI Assisted)"
+title = ""
 description = "Notes and writing by Rick Waterman on backend engineering, AWS serverless, and platform engineering, drafted with generative AI assistance."
 +++
 
