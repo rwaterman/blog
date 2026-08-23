@@ -12,6 +12,7 @@ account-wide infrastructure.
 
 - Hugo **extended** — CI pins `0.163.3` in `.github/workflows/deploy.yml`; `brew install hugo`
 - Go — `go.mod` declares `1.26.4`; CI uses `go-version-file: go.mod`; `brew install go`
+- Node.js + npm — infra deploy uses `npm ci` / `npx cdk`; CI uses Node `22`
 - AWS CLI + CDK bootstrap in `us-east-1` for infra work
 
 ## Develop
@@ -100,11 +101,12 @@ flowchart LR
   GH[GitHub Actions<br/>Go + Hugo extended, OIDC] -->|hugo build, s3 sync, invalidate| S3[(S3 bucket<br/>private, OAC)]
   U[Browser] --> R53[Route53<br/>A/AAAA alias] --> CF[CloudFront<br/>ACM cert + rewrite Function]
   CF --> S3
-  WAF[Shared WAF WebACL<br/>owned by website repo] -.associated.- CF
+  WAF[Shared WAF WebACL<br/>owned by website repo] -. associated .-> CF
 ```
 
-Everything runs in `us-east-1` under the `rickgwaterman.com` hosted zone. The CDK app
-synthesizes one shared stack plus one stack per environment.
+Regional resources run in `us-east-1` under the `rickgwaterman.com` hosted zone;
+CloudFront and Route53 are global services. The CDK app synthesizes one shared stack plus
+one stack per environment.
 
 ### `BlogShared`
 
@@ -130,23 +132,24 @@ its distribution; and SSM parameters `/blog/<env>/bucket-name` and
 
 The distribution attaches the shared CloudFront WebACL (geo-block of sanctioned
 countries, per-IP rate limit, AWS IP-reputation list) by reading its ARN from SSM
-`/website/shared/cloudfront-webacl-arn` at synth time, so WAF rules are defined in one
-place for all three sites.
+`/website/shared/cloudfront-webacl-arn` as a CloudFormation dynamic reference resolved at
+deployment time, so WAF rules are defined in one place for all three sites.
 
 ## CI/CD
 
 Both workflows use OIDC (`id-token: write`); no long-lived AWS keys exist.
 
 - **`deploy.yml`** — on push to `develop` (→ dev) or `main` (→ prod), or
-  `workflow_dispatch` with an `env` choice. Installs Go (from `go.mod`) and Hugo extended
-  (pinned `HUGO_VERSION`), fetches the Congo module, runs
+  `workflow_dispatch` with an `env` choice (dispatch from `develop` for `dev`, `main` for
+  `prod`, to match the branch-scoped OIDC trust policy). Installs Go (from `go.mod`) and
+  Hugo extended (pinned `HUGO_VERSION`), fetches the Congo module, runs
   `hugo --gc --minify --baseURL https://<host>/`, writes a `Disallow: /` `robots.txt` on
   dev, assumes `blog-content-<env>`, syncs `public/` to S3 with `must-revalidate` cache
   headers, then invalidates `/*`. Needs secret `AWS_ACCOUNT_ID`.
-- **`infra.yml`** — on push to `develop` touching `infra/**`. Assumes
-  `blog-infra-deploy` and runs `cdk deploy --all` — every stack, dev **and** prod.
-  Infra has no `main` path; only content promotion follows `main`. Needs secrets
-  `AWS_ACCOUNT_ID` and `HOSTED_ZONE_ID`.
+- **`infra.yml`** — on push to `develop` touching `infra/**` or
+  `.github/workflows/infra.yml`, plus `workflow_dispatch`. Assumes `blog-infra-deploy` and
+  runs `cdk deploy --all` — every stack, dev **and** prod. Infra has no `main` path; only
+  content promotion follows `main`. Needs secrets `AWS_ACCOUNT_ID` and `HOSTED_ZONE_ID`.
 
 Unlike the Node-based siblings, the build needs Go plus a network fetch of the Hugo
 Module; `go.mod`/`go.sum` pin the theme so CI is reproducible.
