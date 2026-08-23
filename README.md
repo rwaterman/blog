@@ -1,6 +1,6 @@
 # blog
 
-Source for [blog.rickgwaterman.com](https://blog.rickgwaterman.com) — Rick Waterman's
+Source for [blog.rickwaterman.com](https://blog.rickwaterman.com) — Rick Waterman's
 personal blog: essays on cloud architecture, AWS, and engineering leadership. Built with
 [Hugo](https://gohugo.io/) and the [Congo](https://jpanther.github.io/congo/) theme
 (installed as a Hugo Module), deployed to S3 + CloudFront with AWS CDK. It is a sibling of
@@ -108,7 +108,7 @@ flowchart LR
 The home region is `us-west-2`; everything that can live there does (bucket,
 distribution, roles, SSM). CloudFront requires its ACM certificate in `us-east-1`, so
 each environment gets a thin `BlogCert<Env>` stack there whose certificate is passed to the
-home-region site stack with CDK `crossRegionReferences`. DNS is the `rickgwaterman.com`
+home-region site stack with CDK `crossRegionReferences`. DNS is the `rickwaterman.com`
 hosted zone.
 
 | Stack | Region | Contents |
@@ -128,8 +128,8 @@ CDK bootstrap roles in both regions.
 
 | Env | Stack | Domain | Deploys from | Content role |
 | --- | --- | --- | --- | --- |
-| dev | `BlogSiteDev` | `blog-dev.rickgwaterman.com` | `develop` | `blog-content-dev` |
-| prod | `BlogSiteProd` | `blog.rickgwaterman.com` | `main` | `blog-content-prod` |
+| dev | `BlogSiteDev` | `blog-dev.rickwaterman.com` | `develop` | `blog-content-dev` |
+| prod | `BlogSiteProd` | `blog.rickwaterman.com` | `main` | `blog-content-prod` |
 
 Each environment stack creates: a private, encrypted S3 bucket (prod: `RETAIN`, dev:
 destroy + auto-empty); a CloudFront distribution with Origin Access Control, a
