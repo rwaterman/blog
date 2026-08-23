@@ -3,13 +3,13 @@ label = "English"
 direction = "ltr"
 weight = 1
 
-title = "Rick Waterman"
+title = "Blog (Generative AI Assisted)"
 
 [params]
   dateFormat = "2 January 2006"
 
   mainSections = ["posts"]
-  description = "Notes and writing by Rick Waterman."
+  description = "Notes and writing by Rick Waterman on backend engineering, AWS serverless, and platform engineering, drafted with generative AI assistance."
 
 [params.author]
   name = "Rick Waterman"

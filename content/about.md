@@ -21,6 +21,7 @@ with my resume is [rickgwaterman.com](https://rickgwaterman.com).
 
 ## AI disclosure
 
-The ideas and opinions on this blog are my own. I use AI tools to assist with
-drafting, editing, and organizing. Posts that leaned on AI assistance carry a
-per-post disclosure notice.
+The ideas and opinions on this blog are my own. I draft and edit with
+generative AI assistance, including source research, and review everything
+before it ships. Each post carries a short notice at the top, and factual
+claims link to their sources.
