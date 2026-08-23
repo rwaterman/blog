@@ -2,7 +2,7 @@ name: Deploy blog
 
 on:
   push:
-    branches: [develop]
+    branches: [develop, main]
   workflow_dispatch:
     inputs:
       env:
@@ -36,8 +36,15 @@ jobs:
         id: target
         env:
           REQUESTED_ENV: ${{ github.event_name == 'workflow_dispatch' && inputs.env || '' }}
+          REF_NAME: ${{ github.ref_name }}
         run: |
-          TARGET_ENV="${REQUESTED_ENV:-dev}"
+          if [ -n "$REQUESTED_ENV" ]; then
+            TARGET_ENV="$REQUESTED_ENV"
+          elif [ "$REF_NAME" = "main" ]; then
+            TARGET_ENV="prod"
+          else
+            TARGET_ENV="dev"
+          fi
           case "$TARGET_ENV" in
             dev)
               echo "name=dev" >> "$GITHUB_OUTPUT"
