@@ -41,6 +41,13 @@ It renders a lightbulb-icon callout (styled to match Congo's `alert`). Pass a st
 override the default message, e.g. `{{< ai-disclosure "**My own ideas.** Drafted with AI help." >}}`.
 The shortcode lives in `layouts/_shortcodes/ai-disclosure.html`.
 
+To credit the model at the bottom of the article (rendered above the author byline by the
+`layouts/_partials/author.html` override), set `ai_model` in front matter:
+
+```toml
+ai_model = "Claude Fable 5 (Anthropic)"
+```
+
 ## Build
 
 ```sh

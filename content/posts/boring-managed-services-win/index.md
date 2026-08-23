@@ -5,6 +5,7 @@ draft = false
 summary = "Every queue, scheduler, or database you run yourself spends an innovation token on something your customers will never notice. Managed AWS services are boring in the best sense: their failure modes are documented, their metrics ship by default, and the toil they remove is the toil nobody measures."
 tags = ["aws", "serverless", "architecture", "managed-services", "operations", "cost"]
 categories = ["architecture"]
+ai_model = "Claude Fable 5 (Anthropic)"
 +++
 
 {{< ai-disclosure >}}

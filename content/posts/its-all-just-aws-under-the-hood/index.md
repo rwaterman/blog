@@ -5,6 +5,7 @@ draft = false
 summary = "Vercel, Netlify, Supabase, Heroku, Render, PlanetScale: open their region docs and you find AWS region codes. The platforms are thin layers over primitives you can learn directly. Deep AWS specialization — with real fluency in CDK and Terraform — is not narrowing. It is the thing that lets you use any of them, and leave any of them."
 tags = ["aws", "cdk", "terraform", "infrastructure-as-code", "paas", "vercel", "career"]
 categories = ["architecture"]
+ai_model = "Claude Fable 5 (Anthropic)"
 +++
 
 {{< ai-disclosure >}}

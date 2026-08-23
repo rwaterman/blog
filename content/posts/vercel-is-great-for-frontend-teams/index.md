@@ -5,6 +5,7 @@ draft = false
 summary = "Vercel's developer experience is the best in the business, and for a frontend team without cloud depth it is the right call. But if your organization already has AWS CDK or Terraform specialization, you are paying a markup on Lambda and CloudFront for an abstraction you do not need, with spend controls that lag, private networking behind an Enterprise contract, and a self-hosting story that has finally caught up."
 tags = ["vercel", "nextjs", "aws", "cdk", "terraform", "serverless", "cost", "platform-engineering"]
 categories = ["architecture"]
+ai_model = "Claude Fable 5 (Anthropic)"
 +++
 
 {{< ai-disclosure >}}
