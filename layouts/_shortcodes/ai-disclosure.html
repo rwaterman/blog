@@ -1,21 +1,24 @@
 {{- /*
-  AI writing-assistance disclosure badge.
+  Generative-AI disclosure badge.
 
-  Place near the top of an article's content to signal that the ideas are the
-  author's own but that AI tooling assisted with drafting/editing:
+  Place as the first line of an article's body. Reads the drafting model from
+  the page's `ai_model` front-matter param:
 
+    ai_model = "Claude Fable 5 (Anthropic)"
+    ...
     {{< ai-disclosure >}}
 
-  Optionally override the message (Markdown is supported):
+  renders: "Created with assistance of Generative AI using Claude Fable 5 (Anthropic)."
+
+  Pass a string to override the whole message (Markdown supported):
 
     {{< ai-disclosure "**My own ideas.** Drafted with AI help." >}}
 
-  Styling intentionally mirrors the theme's built-in `alert` shortcode so it
-  stays consistent with Congo and only uses classes present in the compiled
-  CSS bundle (the theme ships pre-built Tailwind; new utility classes won't
-  exist at build time).
+  Styling mirrors the theme's built-in `alert` shortcode and only uses classes
+  present in the compiled CSS bundle (Congo ships pre-built Tailwind).
 */ -}}
-{{- $message := .Get 0 | default "**Generative AI assisted.** The ideas and opinions here are my own; an AI model helped draft and edit the text." -}}
+{{- $model := .Page.Params.ai_model | default "Generative AI" -}}
+{{- $message := .Get 0 | default (printf "Created with assistance of Generative AI using **%s**." $model) -}}
 <div class="mb-6 flex items-center rounded-md bg-primary-100 px-4 py-3 text-sm dark:bg-primary-900">
   <span class="pe-3 text-primary-500 dark:text-primary-400">
     {{ partial "icon.html" "lightbulb" }}
