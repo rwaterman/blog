@@ -21,7 +21,7 @@ with my resume is [rickgwaterman.com](https://rickgwaterman.com).
 
 ## AI disclosure
 
-This is an AI blog platform. The ideas, theses, and opinions on this blog are
-my own; an AI model does the drafting, editing, and source research, and I
-review what ships. Every post carries a disclosure notice at the top, and every
-factual claim links to its source so you can check the model's work.
+The ideas and opinions on this blog are my own. I draft and edit with
+generative AI assistance, including source research, and review everything
+before it ships. Each post carries a short notice at the top, and factual
+claims link to their sources.

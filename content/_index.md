@@ -1,10 +1,8 @@
 +++
-title = "Blog - AI Blog Platform"
-description = "AI-drafted articles built from Rick Waterman's own ideas, opinions, and experience as a Lead Cloud Architect."
+title = "Blog (Generative AI Assisted)"
+description = "Notes and writing by Rick Waterman on backend engineering, AWS serverless, and platform engineering, drafted with generative AI assistance."
 +++
 
-**Every article here is AI-written from my ideas.** I supply the thesis, the
-opinions, and the lived experience; an AI model does the drafting and editing,
-and I review what ships. Topics: backend engineering, AWS serverless, platform
-engineering, and the trade-offs behind them. Details in the
-[AI disclosure](/about/#ai-disclosure).
+Notes and writing on backend engineering, AWS serverless, and platform
+engineering. The ideas and opinions are mine; the drafting is done with
+generative AI assistance. See the [AI disclosure](/about/#ai-disclosure).
