@@ -13,7 +13,7 @@ account-wide infrastructure.
 - Hugo **extended** — CI pins `0.163.3` in `.github/workflows/deploy.yml`; `brew install hugo`
 - Go — `go.mod` declares `1.26.4`; CI uses `go-version-file: go.mod`; `brew install go`
 - Node.js + npm — infra deploy uses `npm ci` / `npx cdk`; CI uses Node `22`
-- AWS CLI + CDK bootstrap in `us-east-1` for infra work
+- AWS CLI + CDK bootstrap in `us-west-2` and `us-east-1` for infra work
 
 ## Develop
 
@@ -86,8 +86,9 @@ archetypes/                 default.md, posts.md
 go.mod, go.sum              pins Congo v2 as a Hugo Module
 infra/                      AWS CDK app (TypeScript)
   bin/blog.ts
-  lib/shared-stack.ts       blog-infra-deploy role, imports shared OIDC provider
-  lib/site-stack.ts         one environment
+  lib/shared-stack.ts     blog-infra-deploy role, imports shared OIDC provider (us-west-2)
+  lib/cert-stack.ts       per-env ACM certificate (us-east-1)
+  lib/site-stack.ts       one environment (us-west-2)
   lib/site-config.ts        SITE_ENVS, account/region/zone
 .github/workflows/
   deploy.yml                build + publish content
@@ -104,16 +105,24 @@ flowchart LR
   WAF[Shared WAF WebACL<br/>owned by website repo] -. associated .-> CF
 ```
 
-Regional resources run in `us-east-1` under the `rickgwaterman.com` hosted zone;
-CloudFront and Route53 are global services. The CDK app synthesizes one shared stack plus
-one stack per environment.
+The home region is `us-west-2`; everything that can live there does (bucket,
+distribution, roles, SSM). CloudFront requires its ACM certificate in `us-east-1`, so
+each environment gets a thin `BlogCert<Env>` stack there whose certificate is passed to the
+home-region site stack with CDK `crossRegionReferences`. DNS is the `rickgwaterman.com`
+hosted zone.
+
+| Stack | Region | Contents |
+| --- | --- | --- |
+| `BlogShared` | us-west-2 | `blog-infra-deploy` role (imports the website repo's OIDC provider) |
+| `BlogCert<Env>` | us-east-1 | That environment's DNS-validated ACM certificate |
+| `BlogSite<Env>` | us-west-2 | Bucket, distribution, DNS, content role, SSM params |
 
 ### `BlogShared`
 
 Imports the account-wide GitHub OIDC provider (created once by the `website` repo's
 `WebsiteShared` stack) and creates the `blog-infra-deploy` role that `infra.yml` assumes
 from `develop`. The role has no service permissions of its own — it can only assume the
-CDK bootstrap roles.
+CDK bootstrap roles in both regions.
 
 ### `BlogSite<Env>`
 
@@ -125,14 +134,14 @@ CDK bootstrap roles.
 Each environment stack creates: a private, encrypted S3 bucket (prod: `RETAIN`, dev:
 destroy + auto-empty); a CloudFront distribution with Origin Access Control, a
 viewer-request CloudFront Function for Hugo's directory-index URLs, and 403/404 mapped to
-`/404.html`; a DNS-validated ACM certificate; Route53 A/AAAA alias records; a
+`/404.html`; Route53 A/AAAA alias records; a
 branch-scoped OIDC role that may only write to that environment's bucket and invalidate
 its distribution; and SSM parameters `/blog/<env>/bucket-name` and
 `/blog/<env>/distribution-id` that the deploy workflow resolves at run time.
 
 The distribution attaches the shared CloudFront WebACL (geo-block of sanctioned
 countries, per-IP rate limit, AWS IP-reputation list) by reading its ARN from SSM
-`/website/shared/cloudfront-webacl-arn` as a CloudFormation dynamic reference resolved at
+`/website/shared/cloudfront-webacl-arn` (us-west-2) as a CloudFormation dynamic reference resolved at
 deployment time, so WAF rules are defined in one place for all three sites.
 
 ## CI/CD
@@ -160,6 +169,8 @@ Branching follows git flow: feature branches → `develop` (dev), releases → `
 
 `blog-infra-deploy` is created by `BlogShared`, so the very first deploy runs locally
 with admin credentials, after the `website` repo's `WebsiteShared` stack exists:
+
+Both regions must be CDK-bootstrapped.
 
 ```sh
 cd infra && npm ci
