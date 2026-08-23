@@ -39,8 +39,10 @@ export const SITE_ENVS: SiteEnv[] = [
     domainName: 'blog-dev.rickgwaterman.com',
     branch: 'develop',
   },
-  // Prod (blog.rickgwaterman.com) is the documented future target. To stand it up, add:
-  //   { id: 'Prod', envName: 'prod', domainName: 'blog.rickgwaterman.com', branch: 'develop' }
-  // and a matching 'prod' case (host blog.rickgwaterman.com) in
-  // .github/workflows/deploy.yml's "Resolve environment" step.
+  {
+    id: 'Prod',
+    envName: 'prod',
+    domainName: 'blog.rickgwaterman.com',
+    branch: 'main',
+  },
 ];
