@@ -7,10 +7,12 @@ function requireEnv(name: string): string {
 }
 
 export const ACCOUNT = process.env.CDK_DEFAULT_ACCOUNT ?? requireEnv('AWS_ACCOUNT_ID');
-export const REGION = 'us-east-1';
+export const REGION = 'us-west-2';
+// CloudFront certificates must live in us-east-1.
+export const EDGE_REGION = 'us-east-1';
 
 export const HOSTED_ZONE_ID = requireEnv('HOSTED_ZONE_ID');
-export const ZONE_NAME = 'rickgwaterman.com';
+export const ZONE_NAME = 'rickwaterman.com';
 
 export const GITHUB_REPO = 'rwaterman/blog';
 
@@ -26,7 +28,7 @@ export interface SiteEnv {
   id: string;
   /** Lowercase environment key used in role names and SSM paths, e.g. "dev". */
   envName: string;
-  /** Primary domain served, e.g. "blog-dev.rickgwaterman.com". */
+  /** Primary domain served, e.g. "blog-dev.rickwaterman.com". */
   domainName: string;
   /** Git branch whose pushes deploy this environment. */
   branch: string;
@@ -36,13 +38,13 @@ export const SITE_ENVS: SiteEnv[] = [
   {
     id: 'Dev',
     envName: 'dev',
-    domainName: 'blog-dev.rickgwaterman.com',
+    domainName: 'blog-dev.rickwaterman.com',
     branch: 'develop',
   },
   {
     id: 'Prod',
     envName: 'prod',
-    domainName: 'blog.rickgwaterman.com',
+    domainName: 'blog.rickwaterman.com',
     branch: 'main',
   },
 ];

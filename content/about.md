@@ -16,8 +16,8 @@ before users do, and infrastructure as code for all of it. I hold the AWS
 Certified Developer (2023) and AWS Solutions Architect (2020) certifications.
 
 This blog is where longer-form writing lands. Working references live at
-[notes.rickgwaterman.com](https://notes.rickgwaterman.com), and the main site
-with my resume is [rickgwaterman.com](https://rickgwaterman.com).
+[notes.rickwaterman.com](https://notes.rickwaterman.com), and the main site
+with my resume is [rickwaterman.com](https://rickwaterman.com).
 
 ## AI disclosure
 
