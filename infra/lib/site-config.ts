@@ -1,3 +1,5 @@
+import * as cdk from 'aws-cdk-lib';
+
 function requireEnv(name: string): string {
   const value = process.env[name];
   if (!value) {
@@ -30,10 +32,16 @@ export interface SiteEnv {
   envName: string;
   /** Primary domain served, e.g. "blog-dev.rickwaterman.com". */
   domainName: string;
-  /** Git branch whose pushes deploy this environment. */
+  /**
+   * Git branch allowed to assume this environment's content role, matched as a glob
+   * against the OIDC `sub` claim (`refs/heads/<branch>`). Pushes to `develop` / `main`
+   * auto-deploy dev / prod; optional environments are only ever deployed by hand via
+   * `workflow_dispatch`, so they accept any branch (`*`).
+   */
   branch: string;
 }
 
+/** Always synthesized and deployed by `cdk deploy --all`. */
 export const SITE_ENVS: SiteEnv[] = [
   {
     id: 'Dev',
@@ -48,3 +56,47 @@ export const SITE_ENVS: SiteEnv[] = [
     branch: 'main',
   },
 ];
+
+/**
+ * Synthesized only when named in the `optional` CDK context value, e.g.
+ * `cdk deploy --all -c optional=qa,uat`. The push-triggered infra workflow never passes
+ * that flag, and CDK leaves stacks that are absent from a synth untouched, so an
+ * optional environment persists from its explicit deploy until its explicit destroy.
+ */
+export const OPTIONAL_SITE_ENVS: SiteEnv[] = [
+  {
+    id: 'Qa',
+    envName: 'qa',
+    domainName: 'blog-qa.rickwaterman.com',
+    branch: '*',
+  },
+  {
+    id: 'Staging',
+    envName: 'staging',
+    domainName: 'blog-staging.rickwaterman.com',
+    branch: '*',
+  },
+  {
+    id: 'Uat',
+    envName: 'uat',
+    domainName: 'blog-uat.rickwaterman.com',
+    branch: '*',
+  },
+];
+
+/** The default environments plus any optional ones requested via `-c optional=a,b`. */
+export function selectSiteEnvs(app: cdk.App): SiteEnv[] {
+  const requested = String(app.node.tryGetContext('optional') ?? '')
+    .split(',')
+    .map((name) => name.trim())
+    .filter(Boolean);
+  const optional = requested.map((name) => {
+    const site = OPTIONAL_SITE_ENVS.find((candidate) => candidate.envName === name);
+    if (!site) {
+      const known = OPTIONAL_SITE_ENVS.map((candidate) => candidate.envName).join(', ');
+      throw new Error(`Unknown optional environment "${name}"; expected one of: ${known}`);
+    }
+    return site;
+  });
+  return [...SITE_ENVS, ...optional];
+}

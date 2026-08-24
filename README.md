@@ -89,7 +89,7 @@ infra/                      AWS CDK app (TypeScript)
   lib/shared-stack.ts     blog-infra-deploy role, imports shared OIDC provider (us-west-2)
   lib/cert-stack.ts       per-env ACM certificate (us-east-1)
   lib/site-stack.ts       one environment (us-west-2)
-  lib/site-config.ts        SITE_ENVS, account/region/zone
+  lib/site-config.ts        SITE_ENVS + OPTIONAL_SITE_ENVS, account/region/zone
 .github/workflows/
   deploy.yml                build + publish content
   infra.yml                 cdk deploy
@@ -130,9 +130,12 @@ CDK bootstrap roles in both regions.
 | --- | --- | --- | --- | --- |
 | dev | `BlogSiteDev` | `blog-dev.rickwaterman.com` | `develop` | `blog-content-dev` |
 | prod | `BlogSiteProd` | `blog.rickwaterman.com` | `main` | `blog-content-prod` |
+| qa (optional) | `BlogSiteQa` | `blog-qa.rickwaterman.com` | any branch, dispatch only | `blog-content-qa` |
+| staging (optional) | `BlogSiteStaging` | `blog-staging.rickwaterman.com` | any branch, dispatch only | `blog-content-staging` |
+| uat (optional) | `BlogSiteUat` | `blog-uat.rickwaterman.com` | any branch, dispatch only | `blog-content-uat` |
 
-Each environment stack creates: a private, encrypted S3 bucket (prod: `RETAIN`, dev:
-destroy + auto-empty); a CloudFront distribution with Origin Access Control, a
+Each environment stack creates: a private, encrypted S3 bucket (prod: `RETAIN`, all
+others: destroy + auto-empty); a CloudFront distribution with Origin Access Control, a
 viewer-request CloudFront Function for Hugo's directory-index URLs, and 403/404 mapped to
 `/404.html`; Route53 A/AAAA alias records; a
 branch-scoped OIDC role that may only write to that environment's bucket and invalidate
@@ -144,21 +147,54 @@ countries, per-IP rate limit, AWS IP-reputation list) by reading its ARN from SS
 `/website/shared/cloudfront-webacl-arn` (us-west-2) as a CloudFormation dynamic reference resolved at
 deployment time, so WAF rules are defined in one place for all three sites.
 
+#### Optional environments
+
+`qa`, `staging`, and `uat` are declared in `infra/lib/site-config.ts` (`OPTIONAL_SITE_ENVS`)
+but only synthesized when named in the `optional` CDK context value, so a plain
+`cdk deploy --all` — including every push-triggered `infra.yml` run — never creates them.
+CDK leaves stacks that are absent from a synth untouched, so once deployed an optional
+environment stays up, serving its last published content, until it is destroyed
+explicitly. Idle cost is near zero (ACM and Route53 records are free, WAF is not charged
+per association); the trade-off is that shared stack changes only reach an optional
+environment when it is redeployed with the flag.
+
+Deploy the infra — dispatch `infra.yml` from `develop` with the `optional` input set
+(e.g. `qa,uat`), or locally:
+
+```sh
+cd infra && npm ci
+AWS_ACCOUNT_ID=<account> HOSTED_ZONE_ID=<zoneId> npx cdk deploy --all --require-approval never -c optional=qa,uat
+```
+
+Publish content — dispatch `deploy.yml` from any branch with `env` set to `qa`, `staging`,
+or `uat`. The optional content roles trust every `refs/heads/*` ref (dev and prod stay
+pinned to `develop` and `main`), and every non-prod build ships a `Disallow: /`
+`robots.txt`.
+
+Tear down (the certificate is `RETAIN`; delete the orphan in ACM us-east-1 afterwards):
+
+```sh
+AWS_ACCOUNT_ID=<account> HOSTED_ZONE_ID=<zoneId> npx cdk destroy BlogSiteQa BlogCertQa -c optional=qa
+```
+
 ## CI/CD
 
 Both workflows use OIDC (`id-token: write`); no long-lived AWS keys exist.
 
 - **`deploy.yml`** — on push to `develop` (→ dev) or `main` (→ prod), or
-  `workflow_dispatch` with an `env` choice (dispatch from `develop` for `dev`, `main` for
-  `prod`, to match the branch-scoped OIDC trust policy). Installs Go (from `go.mod`) and
+  `workflow_dispatch` with an `env` choice of `dev`, `qa`, `staging`, `uat`, `prod`
+  (dispatch from `develop` for `dev` and `main` for `prod`, to match the branch-scoped
+  OIDC trust policy; the optional envs accept any branch). Installs Go (from `go.mod`) and
   Hugo extended (pinned `HUGO_VERSION`), fetches the Congo module, runs
   `hugo --gc --minify --baseURL https://<host>/`, writes a `Disallow: /` `robots.txt` on
-  dev, assumes `blog-content-<env>`, syncs `public/` to S3 with `must-revalidate` cache
-  headers, then invalidates `/*`. Needs secret `AWS_ACCOUNT_ID`.
+  every non-prod env, assumes `blog-content-<env>`, syncs `public/` to S3 with
+  `must-revalidate` cache headers, then invalidates `/*`. Needs secret `AWS_ACCOUNT_ID`.
 - **`infra.yml`** — on push to `develop` touching `infra/**` or
-  `.github/workflows/infra.yml`, plus `workflow_dispatch`. Assumes `blog-infra-deploy` and
-  runs `cdk deploy --all` — every stack, dev **and** prod. Infra has no `main` path; only
-  content promotion follows `main`. Needs secrets `AWS_ACCOUNT_ID` and `HOSTED_ZONE_ID`.
+  `.github/workflows/infra.yml`, plus `workflow_dispatch` with an `optional` input.
+  Assumes `blog-infra-deploy` and runs `cdk deploy --all` — every default stack, dev
+  **and** prod, plus whichever optional environments the dispatch input names. Infra has
+  no `main` path; only content promotion follows `main`. Needs secrets `AWS_ACCOUNT_ID`
+  and `HOSTED_ZONE_ID`.
 
 Unlike the Node-based siblings, the build needs Go plus a network fetch of the Hugo
 Module; `go.mod`/`go.sum` pin the theme so CI is reproducible.

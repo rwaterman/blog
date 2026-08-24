@@ -11,6 +11,9 @@ on:
         type: choice
         options:
           - dev
+          - qa
+          - staging
+          - uat
           - prod
 
 concurrency:
@@ -46,19 +49,15 @@ jobs:
             TARGET_ENV="dev"
           fi
           case "$TARGET_ENV" in
-            dev)
-              echo "name=dev" >> "$GITHUB_OUTPUT"
-              echo "host=blog-dev.rickwaterman.com" >> "$GITHUB_OUTPUT"
-              ;;
-            prod)
-              echo "name=prod" >> "$GITHUB_OUTPUT"
-              echo "host=blog.rickwaterman.com" >> "$GITHUB_OUTPUT"
-              ;;
+            prod) HOST="blog.rickwaterman.com" ;;
+            dev|qa|staging|uat) HOST="blog-${TARGET_ENV}.rickwaterman.com" ;;
             *)
               echo "Unsupported environment: $TARGET_ENV" >&2
               exit 1
               ;;
           esac
+          echo "name=$TARGET_ENV" >> "$GITHUB_OUTPUT"
+          echo "host=$HOST" >> "$GITHUB_OUTPUT"
 
       # Hugo Modules are Go modules: Hugo shells out to the Go toolchain to fetch the
       # Congo theme (github.com/jpanther/congo/v2) into the module cache at build time.
@@ -78,8 +77,8 @@ jobs:
           SITE_HOST: ${{ steps.target.outputs.host }}
         run: hugo --gc --minify --baseURL "https://${SITE_HOST}/"
 
-      - name: Block indexing on dev
-        if: steps.target.outputs.name == 'dev'
+      - name: Block indexing on non-prod
+        if: steps.target.outputs.name != 'prod'
         run: |
           printf 'User-agent: *\nDisallow: /\n' > public/robots.txt
 

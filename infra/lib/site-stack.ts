@@ -80,14 +80,17 @@ export class SiteStack extends cdk.Stack {
     new route53.ARecord(this, 'AliasA', { zone, recordName: site.domainName, target: aliasTarget });
     new route53.AaaaRecord(this, 'AliasAAAA', { zone, recordName: site.domainName, target: aliasTarget });
 
-    // Branch-scoped CI role: only this env's branch can assume it, and it can only touch
-    // this env's bucket, distribution, and SSM parameters.
+    // Branch-scoped CI role: only this env's branch pattern can assume it (a plain name
+    // under StringLike is an exact match), and it can only touch this env's bucket,
+    // distribution, and SSM parameters.
     const contentRole = new iam.Role(this, 'ContentDeployRole', {
       roleName: `blog-content-${site.envName}`,
       description: `GitHub Actions role to deploy ${site.envName} blog content`,
       assumedBy: new iam.OpenIdConnectPrincipal(oidcProvider, {
         StringEquals: {
           'token.actions.githubusercontent.com:aud': 'sts.amazonaws.com',
+        },
+        StringLike: {
           'token.actions.githubusercontent.com:sub': `repo:${GITHUB_REPO}:ref:refs/heads/${site.branch}`,
         },
       }),
