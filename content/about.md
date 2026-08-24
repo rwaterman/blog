@@ -1,8 +1,7 @@
 +++
 title = "About"
 description = "About Rick Waterman."
-showDate = false
-showReadingTime = false
+date = 2026-06-25
 +++
 
 I'm Rick Waterman, a Lead Cloud Architect in the Vancouver, WA / Portland, OR
