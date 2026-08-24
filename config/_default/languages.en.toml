@@ -9,7 +9,7 @@ title = "Blog"
   dateFormat = "2 January 2006"
 
   mainSections = ["posts"]
-  description = "Notes and writing by Rick Waterman on backend engineering, AWS serverless, and platform engineering, drafted with generative AI assistance."
+  description = "Writings by Rick Waterman seeded from actual experience and research working in software and cloud engineering."
 
 [params.author]
   name = "Rick Waterman"

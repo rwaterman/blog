@@ -24,13 +24,16 @@ permissions:
 env:
   AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
   AWS_REGION: us-west-2
-  HUGO_VERSION: 0.163.3
+  HUGO_VERSION: 0.165.0
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          # Full history: enableGitInfo derives each post's "updated" date from git.
+          fetch-depth: 0
 
       - name: Resolve environment
         id: target
@@ -76,7 +79,9 @@ jobs:
       - name: Build site
         env:
           SITE_HOST: ${{ steps.target.outputs.host }}
-        run: hugo --gc --minify --baseURL "https://${SITE_HOST}/"
+          # Non-prod builds are "development" so hugo.IsProduction gates (analytics) stay off.
+          HUGO_ENV: ${{ steps.target.outputs.name == 'prod' && 'production' || 'development' }}
+        run: hugo --gc --minify --environment "${HUGO_ENV}" --baseURL "https://${SITE_HOST}/"
 
       - name: Block indexing on dev
         if: steps.target.outputs.name == 'dev'

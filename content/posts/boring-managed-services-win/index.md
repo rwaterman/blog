@@ -1,6 +1,6 @@
 +++
 title = "Boring Managed Services Win"
-date = 2023-12-04
+date = 2026-08-23T12:00:00-07:00
 draft = false
 summary = "Every queue, scheduler, or database you run yourself spends an innovation token on something your customers will never notice. Managed AWS services are boring in the best sense: their failure modes are documented, their metrics ship by default, and the toil they remove is the toil nobody measures."
 tags = ["aws", "serverless", "architecture", "managed-services", "operations", "cost"]

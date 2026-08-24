@@ -1,0 +1,13 @@
+{{- /*
+  Two badges marking a post as LLM-drafted: "LLM Drafted" plus the model named in
+  `ai_model` front matter. Renders nothing when `ai_model` is unset.
+
+  Used by the article-meta.html override (post header and list cards) and by the
+  ai-disclosure shortcode (inside the article body).
+*/ -}}
+{{- with .Params.ai_model -}}
+  <span class="flex flex-wrap items-center whitespace-nowrap">
+    {{ partial "badge.html" (printf "%s LLM Drafted" (partial "icon.html" "robot") | safeHTML) }}
+    {{ partial "badge.html" (printf "%s %s" (partial "icon.html" "microchip") (. | htmlEscape) | safeHTML) }}
+  </span>
+{{- end -}}

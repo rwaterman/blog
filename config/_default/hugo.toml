@@ -6,13 +6,34 @@ baseURL = "https://blog.rickwaterman.com/"
 defaultContentLanguage = "en"
 
 enableRobotsTXT = true
+enableGitInfo = true
 summaryLength = 0
+
+[frontmatter]
+  lastmod = ["lastmod", ":git", "date", "publishDate"]
 
 [pagination]
   pagerSize = 15
 
 [outputs]
   home = ["HTML", "RSS", "JSON"]
+
+[related]
+  includeNewer = true
+  threshold = 80
+  toLower = true
+  [[related.indices]]
+    name = "series"
+    weight = 120
+  [[related.indices]]
+    name = "tags"
+    weight = 100
+  [[related.indices]]
+    name = "categories"
+    weight = 60
+  [[related.indices]]
+    name = "date"
+    weight = 10
 
 [privacy]
   [privacy.vimeo]
