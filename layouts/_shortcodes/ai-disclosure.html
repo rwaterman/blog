@@ -1,5 +1,5 @@
 {{- /*
-  AI writing-assistance disclosure badge.
+  AI writing-assistance disclosure callout.
 
   Place near the top of an article's content to signal that the ideas are the
   author's own but that AI tooling assisted with drafting/editing:
@@ -9,6 +9,9 @@
   Optionally override the message (Markdown is supported):
 
     {{< ai-disclosure "**My own ideas.** Drafted with AI help." >}}
+
+  When the page sets `ai_model` in front matter, the "LLM Drafted" and model
+  badges (partial "ai-badges.html") render above the message.
 
   Styling intentionally mirrors the theme's built-in `alert` shortcode so it
   stays consistent with Congo and only uses classes present in the compiled
@@ -20,7 +23,8 @@
   <span class="pe-3 text-primary-500 dark:text-primary-400">
     {{ partial "icon.html" "lightbulb" }}
   </span>
-  <span class="text-neutral-700 dark:text-neutral-300">
+  <div class="text-neutral-700 dark:text-neutral-300">
+    {{ if .Page.Params.ai_model }}<div class="mb-1">{{ partial "ai-badges.html" .Page }}</div>{{ end }}
     {{- $message | markdownify -}}
-  </span>
+  </div>
 </div>

@@ -36,24 +36,34 @@ when ready.
 
 ### AI writing-assistance disclosure
 
-To add a badge near the top of an article noting that the ideas are your own but that AI
-assisted with the writing, drop the `ai-disclosure` shortcode in as the first line of the
-post body:
+Every AI-drafted post carries two badges — **LLM Drafted** (robot icon) and the model
+name (microchip icon) — plus a callout and a byline credit. All of it keys off one front
+matter field:
+
+```toml
+ai_model = "Claude Fable 5 (Anthropic)"
+```
+
+Setting `ai_model` renders the badge pair (`layouts/_partials/ai-badges.html`) in the
+post header's meta row and on every list card (posts index, home page recent articles,
+tag/category pages) via the `layouts/_partials/article-meta.html` override, and credits
+the model at the bottom of the article above the author byline via the
+`layouts/_partials/author.html` override. The badge text is the `ai_model` value verbatim.
+
+To repeat the badges inside the article body with a short disclosure, drop the
+`ai-disclosure` shortcode in as the first line of the post body:
 
 ```md
 {{< ai-disclosure >}}
 ```
 
-It renders a lightbulb-icon callout (styled to match Congo's `alert`). Pass a string to
-override the default message, e.g. `{{< ai-disclosure "**My own ideas.** Drafted with AI help." >}}`.
+It renders a lightbulb-icon callout (styled to match Congo's `alert`) with the badge pair
+above the message. Pass a string to override the default message, e.g.
+`{{< ai-disclosure "**My own ideas.** Drafted with AI help." >}}`.
 The shortcode lives in `layouts/_shortcodes/ai-disclosure.html`.
 
-To credit the model at the bottom of the article (rendered above the author byline by the
-`layouts/_partials/author.html` override), set `ai_model` in front matter:
-
-```toml
-ai_model = "Claude Fable 5 (Anthropic)"
-```
+The badge icons are Font Awesome Free (CC BY 4.0) SVGs in `assets/icons/`, the same
+source and format Congo uses for its bundled icons.
 
 ## Build
 
@@ -79,8 +89,11 @@ content/
   _index.md, about.md
   posts/<slug>/index.md     leaf bundles, images alongside
 config/_default/            Hugo + Congo config (split layout)
+assets/icons/               robot.svg, microchip.svg (AI badge icons)
 layouts/
-  _partials/author.html     byline override (ai_model credit)
+  _partials/ai-badges.html      "LLM Drafted" + model badges (from ai_model)
+  _partials/article-meta.html   Congo override: badges in post header + list cards
+  _partials/author.html         byline override (ai_model credit)
   _shortcodes/ai-disclosure.html
 archetypes/                 default.md, posts.md
 go.mod, go.sum              pins Congo v2 as a Hugo Module
