@@ -1,6 +1,6 @@
 +++
 title = "If You Are Not Part of the Implementation, You Are Part of the Problem"
-date = 2024-05-14
+date = 2026-08-23T10:00:00-07:00
 draft = false
 summary = "An architect who does not ship code has no feedback loop, and an architecture with no feedback loop is a guess with a diagram. Own a real piece of the build — the hard module, the infrastructure as code, the review queue — or accept that the team will route around you."
 tags = ["architecture", "leadership", "engineering-culture", "infrastructure-as-code", "adr"]
