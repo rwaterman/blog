@@ -1,0 +1,25 @@
+{{- /*
+  Override of Congo's home/page.html (v2.14.0) that adds the archive timeline
+  (partial "archive-timeline.html") as a right column on large screens; it
+  stacks below the recent articles on smaller screens.
+*/ -}}
+<div class="flex flex-col lg:flex-row">
+  <div class="min-w-0 grow">
+    <article class="prose max-w-full dark:prose-invert">
+      {{ with .Title }}
+        <header>
+          <h1>{{ . | emojify }}</h1>
+        </header>
+      {{ end }}
+      <section>{{ .Content | emojify }}</section>
+    </article>
+    <section>
+      {{ partial "recent-articles.html" . }}
+    </section>
+  </div>
+  <aside class="mt-8 lg:max-w-xs lg:ps-8">
+    <div class="lg:sticky lg:top-10">
+      {{ partial "archive-timeline.html" . }}
+    </div>
+  </aside>
+</div>
