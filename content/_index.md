@@ -1,8 +1,7 @@
 +++
 title = ""
-description = "Notes and writing by Rick Waterman on backend engineering, AWS serverless, and platform engineering, drafted with generative AI assistance."
+description = "Writings by Rick Waterman seeded from actual experience and research working in software and cloud engineering."
 +++
 
-Notes and writing on backend engineering, AWS serverless, and platform
-engineering. The ideas and opinions are mine; the drafting is done with
-generative AI assistance. See the [AI disclosure](/about/#ai-disclosure).
+Writings seeded from my actual experience and research working in Software &
+Cloud Engineering. [AI disclosure](/about/#ai-disclosure)
