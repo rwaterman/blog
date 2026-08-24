@@ -50,7 +50,7 @@
     {{ end }}
 
     {{/* Output AI badges */}}
-    <span class="ps-2">{{ partial "ai-badges.html" . }}</span>
+    {{ if .Params.ai_model }}<span class="ps-2">{{ partial "ai-badges.html" . }}</span>{{ end }}
   </div>
 
   {{/* Output taxonomies */}}

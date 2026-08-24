@@ -24,7 +24,7 @@
     {{ partial "icon.html" "lightbulb" }}
   </span>
   <div class="text-neutral-700 dark:text-neutral-300">
-    <div class="mb-1">{{ partial "ai-badges.html" .Page }}</div>
+    {{ if .Page.Params.ai_model }}<div class="mb-1">{{ partial "ai-badges.html" .Page }}</div>{{ end }}
     {{- $message | markdownify -}}
   </div>
 </div>
