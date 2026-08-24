@@ -10,7 +10,7 @@ account-wide infrastructure.
 
 ## Requirements
 
-- Hugo **extended** — CI pins `0.163.3` in `.github/workflows/deploy.yml`; `brew install hugo`
+- Hugo **extended** — CI pins `0.165.0` in `.github/workflows/deploy.yml`; `brew install hugo`
 - Go — `go.mod` declares `1.26.4`; CI uses `go-version-file: go.mod`; `brew install go`
 - Node.js + npm — infra deploy uses `npm ci` / `npx cdk`; CI uses Node `22`
 - AWS CLI + CDK bootstrap in `us-west-2` and `us-east-1` for infra work
@@ -31,8 +31,10 @@ alongside the article:
 hugo new content posts/my-first-post/index.md
 ```
 
-Edit the front matter (`draft`, `tags`, `categories`, `summary`) and set `draft = false`
-when ready.
+`archetypes/posts.md` scaffolds the front matter (`summary`, `tags`, `categories`,
+`series`, `ai_model`) and the `ai-disclosure` shortcode. Fill it in and set `draft = false`
+when ready. `series` is a taxonomy for multi-part posts — set the same value on each part
+and Hugo generates `/series/<name>/`; leave it commented out otherwise.
 
 ### AI writing-assistance disclosure
 
@@ -65,13 +67,38 @@ The shortcode lives in `layouts/_shortcodes/ai-disclosure.html`.
 The badge icons are Font Awesome Free (CC BY 4.0) SVGs in `assets/icons/`, the same
 source and format Congo uses for its bundled icons.
 
+## Site features
+
+Beyond Congo's defaults (search, code copy, TOC, breadcrumbs, reading time, tag/category
+pages), the site layers on:
+
+- **Archive timeline** — every post grouped year → month in a right-hand column on the
+  home page and `/posts/` (stacks below the list on small screens).
+  `layouts/_partials/archive-timeline.html`, wired in by the `home/page.html` and
+  `list.html` overrides. `/posts/` itself groups by year (`list.groupByYear`).
+- **Related posts** — up to three under each article, after the previous/next links, from
+  Hugo's [Related Content](https://gohugo.io/content-management/related/) weighted by
+  `series` > `tags` > `categories` > date (`[related]` in `hugo.toml`).
+  `layouts/_partials/article-pagination.html` override.
+- **Updated dates from git** — `enableGitInfo` + `[frontmatter] lastmod` derive each post's
+  `Lastmod` from its last commit (a `lastmod` front matter value wins). Congo shows an
+  "updated" date only when it differs from the publish date. CI checks out full history
+  (`fetch-depth: 0`) so this works in the build.
+- **Full-content RSS** — `layouts/rss.xml` adds `<content:encoded>` with the whole article
+  so feed readers do not have to click through.
+- **Sharing links** on each post (`article.sharingLinks`).
+- **Analytics** — Congo supports Fathom, Plausible and Umami (`params.toml`); none is
+  enabled until an id is filled in. Congo only injects the script when
+  `hugo.IsProduction`, and `deploy.yml` builds dev with `--environment development`, so dev
+  never reports.
+
 ## Build
 
 ```sh
 hugo --gc --minify    # outputs the static site to ./public (CI adds --baseURL per env)
 ```
 
-RSS (`/index.xml`) and `sitemap.xml` are generated automatically.
+RSS (`/index.xml`, full article content) and `sitemap.xml` are generated automatically.
 
 ## Configuration
 
@@ -91,11 +118,16 @@ content/
 config/_default/            Hugo + Congo config (split layout)
 assets/icons/               robot.svg, microchip.svg (AI badge icons)
 layouts/
+  list.html                     Congo override: archive timeline beside section lists
+  rss.xml                       Hugo override: full-content feed
+  _partials/archive-timeline.html   year → month → post links
+  _partials/home/page.html      Congo override: archive timeline beside home content
+  _partials/article-pagination.html Congo override: prev/next + related posts
   _partials/ai-badges.html      "LLM Drafted" + model badges (from ai_model)
   _partials/article-meta.html   Congo override: badges in post header + list cards
   _partials/author.html         byline override (ai_model credit)
   _shortcodes/ai-disclosure.html
-archetypes/                 default.md, posts.md
+archetypes/                 default.md, posts.md (front matter + ai-disclosure scaffold)
 go.mod, go.sum              pins Congo v2 as a Hugo Module
 infra/                      AWS CDK app (TypeScript)
   bin/blog.ts
@@ -163,11 +195,13 @@ Both workflows use OIDC (`id-token: write`); no long-lived AWS keys exist.
 
 - **`deploy.yml`** — on push to `develop` (→ dev) or `main` (→ prod), or
   `workflow_dispatch` with an `env` choice (dispatch from `develop` for `dev`, `main` for
-  `prod`, to match the branch-scoped OIDC trust policy). Installs Go (from `go.mod`) and
-  Hugo extended (pinned `HUGO_VERSION`), fetches the Congo module, runs
-  `hugo --gc --minify --baseURL https://<host>/`, writes a `Disallow: /` `robots.txt` on
-  dev, assumes `blog-content-<env>`, syncs `public/` to S3 with `must-revalidate` cache
-  headers, then invalidates `/*`. Needs secret `AWS_ACCOUNT_ID`.
+  `prod`, to match the branch-scoped OIDC trust policy). Checks out full history (for
+  git-derived `Lastmod`), installs Go (from `go.mod`) and Hugo extended (pinned
+  `HUGO_VERSION`), fetches the Congo module, runs
+  `hugo --gc --minify --environment <production|development> --baseURL https://<host>/`,
+  writes a `Disallow: /` `robots.txt` on dev, assumes `blog-content-<env>`, syncs
+  `public/` to S3 with `must-revalidate` cache headers, then invalidates `/*`. Needs
+  secret `AWS_ACCOUNT_ID`.
 - **`infra.yml`** — on push to `develop` touching `infra/**` or
   `.github/workflows/infra.yml`, plus `workflow_dispatch`. Assumes `blog-infra-deploy` and
   runs `cdk deploy --all` — every stack, dev **and** prod. Infra has no `main` path; only

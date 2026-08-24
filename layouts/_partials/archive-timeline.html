@@ -1,0 +1,35 @@
+{{- /*
+  Right-column archive of every post in mainSections, newest first, grouped
+  year → month. Rendered on the home page and section lists. Uses only
+  classes present in Congo's precompiled CSS, so no custom stylesheet.
+*/ -}}
+{{- $posts := where site.RegularPages "Type" "in" site.Params.mainSections -}}
+{{- with $posts }}
+  <nav aria-label="Archive" class="text-sm">
+    <h2 class="mb-2 mt-0 text-lg font-semibold text-neutral-800 dark:text-neutral-100">Archive</h2>
+    <div class="border-s border-dotted border-neutral-300 ps-5 dark:border-neutral-600">
+      {{- range .GroupByDate "2006" }}
+        <h3 class="mb-1 mt-6 text-base font-bold text-neutral-700 first:mt-0 dark:text-neutral-300">{{ .Key }}</h3>
+        {{- range .Pages.GroupByDate "January" }}
+          <h4 class="mb-1 mt-0 text-xs font-semibold uppercase text-neutral-500 dark:text-neutral-400">{{ .Key }}</h4>
+          <ul class="mb-2 mt-0 list-none ps-0">
+            {{- range .Pages }}
+              <li class="my-1 flex leading-6">
+                <time
+                  datetime="{{ .Date.Format "2006-01-02" }}"
+                  class="w-6 flex-none text-neutral-400 dark:text-neutral-500"
+                  >{{ .Date.Format "02" }}</time
+                >
+                <a
+                  href="{{ .RelPermalink }}"
+                  class="text-neutral-700 decoration-primary-500 hover:underline hover:underline-offset-2 dark:text-neutral-300"
+                  >{{ .Title | emojify }}</a
+                >
+              </li>
+            {{- end }}
+          </ul>
+        {{- end }}
+      {{- end }}
+    </div>
+  </nav>
+{{- end }}
