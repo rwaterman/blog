@@ -1,6 +1,6 @@
 +++
 title = "It's All Just AWS Under the Hood"
-date = 2025-03-11
+date = 2026-08-23T11:00:00-07:00
 draft = false
 summary = "Vercel, Netlify, Supabase, Heroku, Render, PlanetScale: open their region docs and you find AWS region codes. The platforms are thin layers over primitives you can learn directly. Deep AWS specialization — with real fluency in CDK and Terraform — is not narrowing. It is the thing that lets you use any of them, and leave any of them."
 tags = ["aws", "cdk", "terraform", "infrastructure-as-code", "paas", "vercel", "career"]

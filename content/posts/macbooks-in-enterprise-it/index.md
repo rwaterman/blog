@@ -1,6 +1,6 @@
 +++
 title = "MacBooks in Enterprise IT: A Practical Modernization Playbook for Technical Leadership"
-date = 2026-06-27
+date = 2026-08-23T08:00:00-07:00
 draft = false
 summary = "For engineering roles, MacBooks are a first-class enterprise endpoint — manageable through modern identity and MDM controls, supportable inside Microsoft-centered environments, and worth standardizing for secure, low-friction execution."
 tags = ["macos", "enterprise-it", "mdm", "endpoint-management", "security", "microsoft-intune"]
