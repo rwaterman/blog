@@ -56,15 +56,34 @@
     const tabs = [...root.querySelectorAll('[role="tab"]')];
     const panels = [...root.querySelectorAll('[role="tabpanel"]')];
     const select = (selected) => {
-      tabs.forEach((tab, index) => tab.setAttribute('aria-selected', String(index === selected)));
+      tabs.forEach((tab, index) => {
+        tab.setAttribute('aria-selected', String(index === selected));
+        tab.tabIndex = index === selected ? 0 : -1;
+      });
       panels.forEach((panel, index) => {
         panel.hidden = index !== selected;
       });
     };
+    const keyTargets = {
+      ArrowRight: (index) => (index + 1) % tabs.length,
+      ArrowLeft: (index) => (index - 1 + tabs.length) % tabs.length,
+      Home: () => 0,
+      End: () => tabs.length - 1,
+    };
     root.querySelectorAll('.digest-version-label').forEach((label) => {
       label.hidden = true;
     });
-    tabs.forEach((tab, index) => tab.addEventListener('click', () => select(index)));
+    tabs.forEach((tab, index) => {
+      tab.addEventListener('click', () => select(index));
+      tab.addEventListener('keydown', (event) => {
+        const target = keyTargets[event.key];
+        if (!target) return;
+        event.preventDefault();
+        const next = target(index);
+        select(next);
+        tabs[next].focus();
+      });
+    });
     root.querySelector('[role="tablist"]').hidden = false;
     select(0);
   })();
