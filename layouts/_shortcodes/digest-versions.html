@@ -1,0 +1,71 @@
+{{- /*
+  Version switcher for a multi-model digest.
+
+    {{< digest-versions >}}
+
+  Renders every page resource matching `versions/*.md` in this leaf bundle, ordered
+  by front matter `weight`, with one tab per file labelled by its `title`.
+  Without JavaScript (and in the RSS feed) every version shows in full under its
+  own label; the script only hides the inactive ones.
+
+  Tab styling reuses the theme's badge colours through its CSS variables because
+  the theme ships pre-built Tailwind and new utility classes won't exist.
+*/ -}}
+{{- $versions := .Page.Resources.Match "versions/*.md" -}}
+{{- $id := printf "digest-versions-%d" .Ordinal -}}
+<div id="{{ $id }}" class="digest-versions">
+  <div role="tablist" aria-label="Model version" class="mb-6 flex flex-wrap" hidden>
+    {{- range $index, $version := $versions }}
+      <button
+        type="button"
+        role="tab"
+        id="{{ $id }}-tab-{{ $index }}"
+        aria-controls="{{ $id }}-panel-{{ $index }}"
+        aria-selected="{{ if $index }}false{{ else }}true{{ end }}"
+        class="me-2 mb-2 rounded-md border px-2 py-1 text-sm">
+        {{- $version.Title -}}
+      </button>
+    {{- end }}
+  </div>
+  {{- range $index, $version := $versions }}
+    <div role="tabpanel" id="{{ $id }}-panel-{{ $index }}" aria-labelledby="{{ $id }}-tab-{{ $index }}">
+      <p class="digest-version-label text-sm font-semibold">{{ $version.Title }}</p>
+      {{ $version.Content }}
+    </div>
+  {{- end }}
+</div>
+<style>
+  .digest-versions [role="tab"] {
+    border-color: rgba(var(--color-primary-400), 1);
+    color: rgba(var(--color-primary-700), 1);
+    cursor: pointer;
+  }
+  .dark .digest-versions [role="tab"] {
+    border-color: rgba(var(--color-primary-600), 1);
+    color: rgba(var(--color-primary-400), 1);
+  }
+  .digest-versions [role="tab"][aria-selected="true"] {
+    background-color: rgba(var(--color-primary-600), 1);
+    border-color: rgba(var(--color-primary-600), 1);
+    color: rgba(var(--color-neutral), 1);
+  }
+</style>
+<script>
+  (() => {
+    const root = document.getElementById({{ $id }});
+    const tabs = [...root.querySelectorAll('[role="tab"]')];
+    const panels = [...root.querySelectorAll('[role="tabpanel"]')];
+    const select = (selected) => {
+      tabs.forEach((tab, index) => tab.setAttribute('aria-selected', String(index === selected)));
+      panels.forEach((panel, index) => {
+        panel.hidden = index !== selected;
+      });
+    };
+    root.querySelectorAll('.digest-version-label').forEach((label) => {
+      label.hidden = true;
+    });
+    tabs.forEach((tab, index) => tab.addEventListener('click', () => select(index)));
+    root.querySelector('[role="tablist"]').hidden = false;
+    select(0);
+  })();
+</script>

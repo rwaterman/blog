@@ -67,6 +67,23 @@ The shortcode lives in `layouts/_shortcodes/ai-disclosure.html`.
 The badge icons are Font Awesome Free (CC BY 4.0) SVGs in `assets/icons/`, the same
 source and format Congo uses for its bundled icons.
 
+The byline sentence under the model credit defaults to "Ideas and opinions are the
+author's; the author reviewed and edited the text." Set `ai_note` in front matter to
+replace it when that is not true of a post.
+
+### Weekly AI digest
+
+A separate private generator opens a draft pull request each week with a digest of
+recent AWS news, written by several AI models from the same RSS items. Nothing is
+published until the pull request is reviewed and merged.
+
+Each digest is a leaf bundle: `index.md` plus one file per model under `versions/`.
+The `digest-versions` shortcode (`layouts/_shortcodes/digest-versions.html`) renders
+every `versions/*.md` file as a tab so readers can switch between the models'
+versions; the tab label is the file's `title` and the tab order is its `weight`. To drop a model's version before
+publishing, delete its file from the pull request. Without JavaScript, and in the RSS
+feed, all versions show one after another.
+
 ## Site features
 
 Beyond Congo's defaults (search, code copy, TOC, breadcrumbs, reading time, tag/category
