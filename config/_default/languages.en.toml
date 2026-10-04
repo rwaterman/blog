@@ -3,7 +3,7 @@ label = "English"
 direction = "ltr"
 weight = 1
 
-title = "Blog"
+title = "AI Blog"
 
 [params]
   dateFormat = "2 January 2006"
