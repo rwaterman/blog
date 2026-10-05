@@ -37,7 +37,7 @@ AWS Health now offers a version catalog providing centralized lifecycle informat
 
 ## Aurora Serverless scales faster for agentic AI workloads
 
-Amazon Aurora Serverless now scales in larger increments, adding up to 16 ACUs within a second and reaching 256 ACUs as workloads grow. This faster scaling suits agentic AI applications with bursty activity and long idle periods. The service automatically scales down to zero when idle, maintaining pay-per-use economics for intermittent workloads.
+Amazon Aurora Serverless now scales in larger increments, adding up to 16 ACUs within a second and reaching 256 ACUs as workloads grow. This faster scaling suits agentic AI applications with bursty activity and long idle periods. Compatible Aurora Serverless clusters configured with a minimum capacity of 0 ACUs can scale down to zero when idle, avoiding idle compute charges for those configurations.
 
 [Source](https://aws.amazon.com/about-aws/whats-new/2026/08/aurora-serverless-instant-16-acu-scaling/)
 

@@ -43,7 +43,7 @@ Amazon GuardDuty Runtime Monitoring is now included in the AWS Security Hub Thre
 
 ## IAM Identity Center multi‑Region support expansion
 
-AWS IAM Identity Center now lets customers replicate the service to additional opt‑in Regions, including GovCloud and China partitions. Multi‑Region deployment improves resilience of identity federation and access management across geographically dispersed accounts. Existing configurations can be synchronized, enabling consistent user and permission propagation while reducing the blast radius of regional outages.
+AWS IAM Identity Center now lets customers replicate the service to additional supported Regions within the same AWS partition. Multi‑Region deployment improves resilience of identity federation and access management across geographically dispersed accounts. Configurations can be synchronized across supported Regions within that partition, enabling consistent user and permission propagation while reducing the blast radius of regional outages.
 
 [Source](https://aws.amazon.com/about-aws/whats-new/2026/10/aws-iam-identity-center-extends-multi-region-support-to-more-aws-regions)
 

@@ -19,7 +19,7 @@ AWS Security Hub now includes Amazon GuardDuty Runtime Monitoring in its Threat 
 
 ## Redshift supports cross-Region queries for data lake tables
 
-Amazon Redshift can now query Amazon S3 data lake tables located in different AWS Regions, with traffic staying within your VPC when enhanced VPC routing is enabled. This eliminates data replication for globally distributed analytics and satisfies strict data residency requirements. The feature runs on Redshift's integrated query engine without additional infrastructure.
+Amazon Redshift can now query Amazon S3 data lake tables located in different AWS Regions, with traffic staying within your VPC when enhanced VPC routing is enabled. This eliminates data replication for globally distributed analytics, but Redshift compute processes the data outside the S3 table's Region, so teams should assess applicable data-residency requirements for their workloads. The feature runs on Redshift's integrated query engine without additional infrastructure.
 
 [Source](https://aws.amazon.com/about-aws/whats-new/2026/10/redshift-cross-Region-queries-for-data-lake)
 

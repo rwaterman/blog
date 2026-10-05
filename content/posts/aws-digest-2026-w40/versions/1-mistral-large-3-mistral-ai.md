@@ -7,13 +7,13 @@ AWS introduced managed AI agents (Bedrock Managed Agents) and accelerated Aurora
 
 ## Amazon Bedrock Managed Agents, powered by OpenAI, is now available in preview
 
-AWS and OpenAI released Bedrock Managed Agents (BMA), an AWS-native implementation of OpenAI's Agents API. BMA manages state persistence, tool selection, and multi-step workflows entirely within AWS, using existing IAM identities and permissions. Durable sessions retain context across interactions, enabling complex agentic applications without custom orchestration. This simplifies building agents optimized for OpenAI models while adhering to AWS governance, targeting enterprises needing secure, self-hosted agentic workflows.
+AWS and OpenAI released Bedrock Managed Agents (BMA), an AWS-native implementation of OpenAI's Agents API. BMA manages state persistence, tool selection, and multi-step workflows entirely within AWS, using existing IAM identities and permissions. Durable sessions retain context across interactions, enabling complex agentic applications without custom orchestration. This simplifies building agents optimized for OpenAI models while adhering to AWS governance, targeting enterprises needing secure agentic workflows on an AWS-managed service.
 
 [Source](https://aws.amazon.com/about-aws/whats-new/2026/09/bedrock-managed-agents-preview/)
 
 ## Amazon Aurora serverless now scales faster to support agentic AI and other bursty workloads
 
-Aurora serverless now scales in 16 ACU increments within seconds, up from smaller increments, and continues scaling up to 256 ACUs. This enables immediate capacity for bursty workloads like agentic AI, which exhibit sudden activity followed by idleness. The system automatically scales down to zero, charging only for active usage. This addresses latency-sensitive applications needing instant compute while eliminating over-provisioning costs.
+Aurora serverless now scales in 16 ACU increments within seconds, up from smaller increments, and continues scaling up to 256 ACUs. This enables immediate capacity for bursty workloads like agentic AI, which exhibit sudden activity followed by idleness. Compatible Aurora Serverless clusters configured with a minimum capacity of 0 ACUs can scale down to zero when idle, eliminating idle compute charges for those configurations. This addresses latency-sensitive applications needing instant compute while avoiding over-provisioning costs.
 
 [Source](https://aws.amazon.com/about-aws/whats-new/2026/08/aurora-serverless-instant-16-acu-scaling/)
 
