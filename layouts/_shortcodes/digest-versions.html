@@ -11,7 +11,7 @@
   Tab styling reuses the theme's badge colours through its CSS variables because
   the theme ships pre-built Tailwind and new utility classes won't exist.
 */ -}}
-{{- $versions := .Page.Resources.Match "versions/*.md" -}}
+{{- $versions := sort (.Page.Resources.Match "versions/*.md") "Weight" -}}
 {{- $id := printf "digest-versions-%d" .Ordinal -}}
 <div id="{{ $id }}" class="digest-versions">
   <div role="tablist" aria-label="Model version" class="mb-6 flex flex-wrap" hidden>
