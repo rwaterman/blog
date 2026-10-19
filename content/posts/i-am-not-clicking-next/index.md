@@ -1,5 +1,5 @@
 +++
-title = "Setup Wizards Are a Piece of Shit and I Am Not Clicking Next"
+title = "Setup Wizards Teach Nothing and I Am Not Clicking Next"
 date = 2026-10-05T16:30:00-07:00
 draft = false
 summary = "Onboarding tours, setup wizards, coach marks, \"What's new\" modals, the mascot with the typing animation. Every one of them stands between me and the app and teaches me nothing. This is the full crashout."
@@ -20,7 +20,7 @@ ai_model = "Claude Fable 5.1 (Anthropic)"
 
 I opened your app to do one thing. I knew what the thing was. I had the tab open, the data ready, maybe nine minutes before the next meeting. And what I got was a dimmed overlay, a card with an exclamation point in it, and a progress bar with nine dots. "Welcome! Let's get you set up!" The exclamation point is doing a lot of work for a dialog that has no close button.
 
-So no, I'm not going to be measured about this. I've been measured. Measured is how we got here. Nobody pushed back on the wizard, so now every product ships one, and every one of them is the same piece of shit in a different shade of blue.
+So no, I'm not going to be measured about this. I've been measured. Measured is how we got here. Nobody pushed back on the wizard, so now every product ships one, and every one of them is the same roadblock in a different shade of blue.
 
 ## Step 1 of 8: They teach nothing. Not a little. Nothing.
 
