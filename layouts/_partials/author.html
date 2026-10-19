@@ -4,13 +4,15 @@
 
     ai_model = "Claude Fable 5"
 
+  Optional `ai_note` front matter replaces the default sentence under the credit.
+
   Everything below the credit block is the theme partial, unchanged.
 */ -}}
 {{ with .Params.ai_model }}
   <div class="mb-6 text-sm text-neutral-500 dark:text-neutral-400">
     <div class="text-[0.6rem] uppercase leading-3">Drafted with</div>
     <div class="font-semibold leading-6 text-neutral-800 dark:text-neutral-300">{{ . }}</div>
-    <div>Generative AI assisted. Ideas and opinions are the author's; the author reviewed and edited the text.</div>
+    <div>{{ $.Params.ai_note | default "Generative AI assisted. Ideas and opinions are the author's; the author reviewed and edited the text." }}</div>
   </div>
 {{ end }}
 {{ if .Params.showAuthor | default (.Site.Params.article.showAuthor | default true) }}
