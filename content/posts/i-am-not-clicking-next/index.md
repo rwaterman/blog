@@ -40,8 +40,6 @@ Then I find Skip, and I get a second modal. "Are you sure? You'll miss out on he
 
 Ad trackers can follow me across the entire internet for a decade. You can't remember that I dismissed a tooltip.
 
-> You can track me across the whole internet, but not whether I closed your tooltip.
-
 ## Step 3 of 8: They throw my answers in the trash
 
 Back button: gone. Refresh: gone. Session timeout on step 7 of 9: gone. Clicked the dimmed area outside the modal by accident: gone, and the modal is gone too, and now there's no way to reopen it, so the setup that was mandatory thirty seconds ago is now impossible.
@@ -59,8 +57,6 @@ And I can't go back to step 3. I can't re-run the wizard, because "setup is comp
 Name. Next. Email. Next. Timezone. Next. That is a form. One form. With labels. Somebody took a form, cut it into slices, put a transition between each slice, and called it an experience. Now the thing that took eight seconds takes forty, and I can't see the third question while answering the first, so I don't know whether "Company" means my company or the customer's company until I've already typed the wrong one.
 
 And the progress bar. Step 3 of 4. I pick an option. Step 4 of 7. The branch I picked unlocked three more steps the bar didn't know about. Later: step 6 of 7, then step 6 of 9. The progress bar has lied to me more than any person I have ever met.
-
-> Step 3 of 4. Then step 4 of 7. The progress bar has lied to me more than any person I know.
 
 ## Step 6 of 8: The tour points at nothing
 
@@ -81,8 +77,6 @@ Here's what I keep coming back to. A wizard exists because the interface could n
 The pattern had a reason once. Early-nineties desktop software, a novice, a one-time task like making a newsletter: a wizard made sense. It ran once, it did a job, it got out of the way. Now every SaaS app runs one on every login, for experts, for things that aren't tasks, and remembers nothing. Nobody is a novice at a modal. We have all seen ten thousand of them. The only thing I've learned from a wizard is where the Skip button hides.
 
 Help should be where I am, when I ask for it, and silent the rest of the time. That's it. That's the whole spec. Everything a wizard does is the opposite of that.
-
-> If the screen needs nine tooltips, the screen is wrong. The tour is the apology.
 
 ## What I want instead: eight things that are not a wizard
 
