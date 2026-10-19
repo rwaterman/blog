@@ -2,7 +2,7 @@
 title = "It's All Just AWS Under the Hood"
 date = 2026-08-23T11:00:00-07:00
 draft = false
-summary = "Vercel, Netlify, Supabase, Heroku, Render, PlanetScale: open their region docs and you find AWS region codes. The platforms are thin layers over primitives you can learn directly. Deep AWS specialization — with real fluency in CDK and Terraform — is not narrowing. It is the thing that lets you use any of them, and leave any of them."
+summary = "Vercel, Netlify, Supabase, Heroku, Render, PlanetScale: open their region docs and you find AWS region codes. The platforms are thin layers over primitives you can learn directly. Deep AWS specialization, with real fluency in CDK and Terraform, is what lets you use any of them and leave any of them."
 tags = ["aws", "cdk", "terraform", "infrastructure-as-code", "paas", "vercel", "career"]
 categories = ["architecture"]
 ai_model = "Claude Fable 5 (Anthropic)"
@@ -18,7 +18,7 @@ The opposite is true, and the evidence is sitting in the documentation of every 
 
 [Vercel's region docs](https://vercel.com/docs/regions) list a "Region Name" column. The values are `iad1`, `sfo1`, `pdx1`, `dub1`, `fra1`, `hnd1`. The column next to it says `us-east-1`, `us-west-1`, `us-west-2`, `eu-west-1`, `eu-central-1`, `ap-northeast-1`. Twenty compute regions, every one of them an AWS region code with a friendlier alias. Vercel said it directly in a [2022 post written with AWS](https://vercel.com/blog/aws-and-vercel-accelerating-innovation-with-serverless-computing): "We've turned lambda into an edge-first compute layer," running "millions of functions that get invoked over five billion times per week."
 
-[Netlify's function configuration](https://docs.netlify.com/build/functions/optional-configuration/) lists deployable regions as `cmh | US East (Ohio)`, `iad | US East (N. Virginia)`, `pdx | US West (Oregon)`, `dub | EU (Ireland)`. Those are not Netlify's names for places. They are AWS's display names, verbatim. The same page says your Node version "must be a valid AWS Lambda runtime for Node.js," set through an environment variable called `AWS_LAMBDA_JS_RUNTIME`.
+[Netlify's function configuration](https://docs.netlify.com/build/functions/optional-configuration/) lists deployable regions as `cmh | US East (Ohio)`, `iad | US East (N. Virginia)`, `pdx | US West (Oregon)`, `dub | EU (Ireland)`. Those are AWS's display names for its regions, verbatim. The same page says your Node version "must be a valid AWS Lambda runtime for Node.js," set through an environment variable called `AWS_LAMBDA_JS_RUNTIME`.
 
 [Supabase](https://supabase.com/docs/guides/platform/regions): "Supabase will deploy your project to an available AWS region within that area based on current infrastructure capacity." The region list is `us-east-1`, `eu-central-1`, `ap-southeast-2`, and so on.
 
@@ -26,15 +26,15 @@ The opposite is true, and the evidence is sitting in the documentation of every 
 
 Move up the stack to the data layer and the pattern holds. [Snowflake](https://docs.snowflake.com/en/user-guide/intro-cloud-platforms) "runs completely on cloud infrastructure" and is hosted on AWS, Azure, or Google Cloud. [MongoDB Atlas](https://www.mongodb.com/docs/atlas/cloud-providers-regions/) and [Confluent Cloud](https://docs.confluent.io/cloud/current/clusters/regions.html) list the same three and use the providers' own region codes in their tables.
 
-None of these companies are hiding it. The abstraction is a renaming layer and a very good developer experience on top of primitives you can rent directly.
+Every one of these companies says so in its own documentation. The abstraction is a renaming layer and a very good developer experience on top of primitives you can rent directly.
 
 ## Platform limits are AWS limits in a costume
 
 Once you know the substrate, the platform's ceilings stop being surprising.
 
-Netlify's [Lambda compatibility page](https://docs.netlify.com/build/functions/lambda-compatibility/) states that the total size of all environment variables "cannot exceed 4 KB" because that is "AWS Lambda's environment variable size limit." Vercel's [Fluid compute](https://vercel.com/docs/fluid-compute), launched last month, exists so that "multiple invocations can share the same physical instance" — which is to say, it exists to escape Lambda's one-invocation-per-execution-environment model, the model every AWS engineer has been designing around for a decade.
+Netlify's [Lambda compatibility page](https://docs.netlify.com/build/functions/lambda-compatibility/) states that the total size of all environment variables "cannot exceed 4 KB" because that is "AWS Lambda's environment variable size limit." Vercel's [Fluid compute](https://vercel.com/docs/fluid-compute), launched in February 2025, exists so that "multiple invocations can share the same physical instance" — which is to say, it exists to escape Lambda's one-invocation-per-execution-environment model, the model every AWS engineer has been designing around for a decade.
 
-If you know Lambda's cold-start behavior, its payload limits, its execution-environment lifecycle, and its regional quotas, you already know where Vercel Functions and Netlify Functions will bend. You do not need the vendor's documentation to tell you; you need it to tell you which of the limits they have papered over and how.
+If you know Lambda's cold-start behavior, its payload limits, its execution-environment lifecycle, and its regional quotas, you already know where Vercel Functions and Netlify Functions will bend. The vendor's documentation then has one remaining job: to tell you which of those limits it has papered over, and how.
 
 ## Outages propagate downward
 
@@ -44,7 +44,7 @@ In December 2021 Heroku's [status page](https://status.heroku.com/incidents/2390
 
 In June 2023 the [Lambda frontend fleet in us-east-1](https://aws.amazon.com/message/061323/) "crossed a capacity threshold that had previously never been reached," triggering "a latent software defect." EventBridge delivery latency reached 801 seconds. That is the service Vercel and Netlify functions run on, in the region Vercel functions default to.
 
-An engineer who can read `aws.amazon.com/message/*` understands their own incident before their vendor's status page finishes updating. That is not a small thing during an outage.
+An engineer who can read `aws.amazon.com/message/*` understands their own incident before their vendor's status page finishes updating. During an outage that head start is worth a lot.
 
 ## Undifferentiated heavy lifting is a dial
 
@@ -56,7 +56,7 @@ AWS CDK makes the dial explicit. The [construct levels](https://docs.aws.amazon.
 - **L2** constructs "include sensible default property configurations, best practice security policies, and generate a lot of the boilerplate code and glue logic for you."
 - **L3** constructs, or patterns, are "the highest-level of abstraction," bundling resources "configured to work together" — `ApplicationLoadBalancedFargateService` is the canonical example.
 
-A PaaS is an L3 somebody else wrote and charges for. Most of the time that is exactly what you want. The question is what happens when the L3 stops fitting: you need VPC access to a private database, or a 15-minute function, or IAM-scoped access to a queue, or a region the vendor does not offer.
+A platform as a service (PaaS) is an L3 somebody else wrote and charges for. Most of the time that is exactly what you want. The question is what happens when the L3 stops fitting: you need VPC access to a private database, or a 15-minute function, or IAM-scoped access to a queue, or a region the vendor does not offer.
 
 If your only skill is the PaaS, the answer is "migrate." If you have CDK and Terraform fluency on the same substrate, the answer is "drop one level." Same AWS account, same region, same IAM model, one more construct.
 
@@ -84,10 +84,10 @@ The primitives also rhyme across providers. Regions, availability zones, virtual
 
 **Multi-cloud vendors genuinely abstract the provider.** If your team lives inside Snowflake or Kafka semantics, specialization in the vendor's product pays more than specialization in any single cloud underneath it. The underlying region's failure modes are mostly the vendor's problem.
 
-**Renting someone else's operational learning is the point.** Vercel built Fluid compute so its customers never had to understand Lambda's concurrency model. Heroku, not its customers, owned the S3-dependency fix in 2017. Most teams should not reproduce that work, and this post is not arguing they should. It is arguing that the engineer who *could* reproduce it is the one who knows when the rental is worth the price.
+**Renting someone else's operational learning is the point.** Vercel built Fluid compute so its customers never had to understand Lambda's concurrency model. Heroku owned the S3-dependency fix in 2017 on behalf of every customer. Most teams should rent that work. This post argues something narrower: the engineer who *could* reproduce it is the one who knows when the rental is worth the price.
 
 ## The thesis
 
 Specialize in AWS. Go deep enough that you can build the L3 yourself, even if you mostly choose not to. Learn CDK and Terraform well enough to drop a level without changing providers. Then use whatever platform fits the workload, knowing what it is made of, what it will cost, and exactly where the exit is.
 
-That is not narrowness. That is the only kind of flexibility that survives contact with an incident.
+That is the only kind of flexibility that survives contact with an incident.

@@ -12,9 +12,9 @@ ai_model = "Claude Fable 5 (Anthropic)"
 
 The old line is "if you're not part of the solution, you're part of the problem." For software and cloud architects the version that matters is narrower: if you are not part of the implementation, you are part of the problem.
 
-Not the whole implementation. Not the critical path. But a real, committed, reviewed piece of the system you designed, so that the consequences of your decisions land on you before they land on the team.
+That means a real, committed, reviewed piece of the system you designed, so that the consequences of your decisions land on you before they land on the team. The critical path stays with the team.
 
-This is not a new idea. It is a twenty-year-old consensus that organizations keep failing to act on.
+The idea is a consensus more than twenty years old, and organizations keep failing to act on it.
 
 ## The feedback loop is the job
 
@@ -22,9 +22,9 @@ Gregor Hohpe's [Architect Elevator](https://martinfowler.com/articles/architect-
 
 He goes further: "Worse yet: some architects quite enjoy themselves not having to deal with those consequences."
 
-That is the uncomfortable part. An architecture role that never touches the build is comfortable precisely because nothing ever proves it wrong. The diagram was correct. The team must have implemented it badly. A design that cannot be falsified is not a design; it is a position.
+That is the uncomfortable part. An architecture role that never touches the build is comfortable precisely because nothing ever proves it wrong. The diagram was correct. The team must have implemented it badly. A design that cannot be falsified is a position.
 
-Werner Vogels made the operations version of this argument for Amazon in [2006](https://aws.amazon.com/blogs/aws/acm_queue_inter): "The traditional model is that you take your software to the wall that separates development and operations, and throw it over and then forget about it. Not at Amazon. You build it, you run it." His reason was not ideology. "Giving developers operational responsibilities has greatly enhanced the quality of the services." The same mechanism applies one level up. You design it, you build part of it.
+Werner Vogels made the operations version of this argument for Amazon in [2006](https://aws.amazon.com/blogs/aws/acm_queue_inter): "The traditional model is that you take your software to the wall that separates development and operations, and throw it over and then forget about it. Not at Amazon. You build it, you run it." His reason was practical: "Giving developers operational responsibilities has greatly enhanced the quality of the services." The same mechanism applies one level up. You design it, you build part of it.
 
 ## Astronauts have been with us since 2001
 
@@ -32,7 +32,7 @@ Joel Spolsky described the pattern in [Don't Let Architecture Astronauts Scare Y
 
 His 2008 [follow-up](https://www.joelonsoftware.com/2008/05/01/architecture-astronauts-take-over/) gives the tell: "The hallmark of an architecture astronaut is that they don't solve an actual problem… they solve something that appears to be the template of a lot of problems."
 
-The modern astronaut does not write white papers about XML. They produce a reference architecture in a slide deck, a set of "guardrails" nobody can find in a repo, and a platform roadmap that assumes an engineering team that does not exist. The slide deck is not wrong. It is unfalsifiable, which is worse.
+The modern astronaut has moved on from white papers about XML. They produce a reference architecture in a slide deck, a set of "guardrails" nobody can find in a repo, and a platform roadmap that assumes an engineering team that does not exist. The slide deck is unfalsifiable, which is worse than wrong.
 
 ## Two kinds of architect
 
@@ -42,7 +42,7 @@ Martin Fowler's [Who Needs an Architect?](https://martinfowler.com/ieeeSoftware/
 
 *Architectus Oryzus* looks different: "In the morning, the architect programs with a developer, trying to harvest some common locking code. In the afternoon, the architect participates in a requirements session." Fowler's summary is that "the most noticeable part of the work is the intense collaboration," and he offers a better job title: "guide, as in mountaineering," someone who "is always there for the really tricky stuff."
 
-His sharpest line is the one I keep coming back to: "an architect's value is inversely proportional to the number of decisions he or she makes." The hands-on architect is not the one who decides everything. It is the one who is close enough to the code to know which decisions actually matter, and takes the hardest one personally.
+His sharpest line is the one I keep coming back to: "an architect's value is inversely proportional to the number of decisions he or she makes." The hands-on architect is the one close enough to the code to know which decisions actually matter, who then takes the hardest one personally.
 
 ## The profession already agreed
 
@@ -52,13 +52,13 @@ Brown again, [2020](https://dev.to/simonbrown/the-software-architecture-role-is-
 
 Mark Richards and Neal Ford, in [Fundamentals of Software Architecture](https://www.thoughtworks.com/content/dam/thoughtworks/documents/books/bk_Fundamentals_of_Software_Architecture_Free_Chapter_en.pdf): "The most successful architects we know are those who have broad hands-on technical knowledge coupled with a strong knowledge of a particular domain." Their observation about decay is the consequence of losing that: "not enough architects focus their energies on continually analyzing existing architectures. As a result, most architectures experience elements of structural decay."
 
-ThoughtWorks put [Coding architects](https://www.thoughtworks.com/radar/techniques/coding-architects) in the Adopt ring of the Technology Radar in August 2010 and kept it there through 2012. Adopt means "we feel strongly that the industry should be adopting these items." That was twelve years ago.
+ThoughtWorks put [Coding architects](https://www.thoughtworks.com/radar/techniques/coding-architects) in the Adopt ring of the Technology Radar in August 2010 and kept it there through 2012. Adopt means "we feel strongly that the industry should be adopting these items." The profession has had that verdict for more than fifteen years.
 
 ## Architecture is now literally code
 
-The strongest reason to be part of the implementation in 2024 is that the architecture is no longer a document describing the system. It is a Terraform module or a CDK stack in a repository, and it is the system.
+The strongest reason to be part of the implementation today is that the architecture now lives as a Terraform module or a CDK stack in a repository. The description of the system is the system.
 
-The VPC topology, the IAM boundaries, the queue retry policies, the Lambda concurrency limits, the Aurora failover configuration: none of that lives in a diagram anymore except as a lagging, usually stale, illustration of what the IaC says. If the architect cannot open a pull request against the infrastructure repository, the architect does not own the architecture. Someone else does, and that someone will eventually stop asking.
+The VPC topology, the IAM boundaries, the queue retry policies, the Lambda concurrency limits, the Aurora failover configuration: all of it lives in the infrastructure as code (IaC), and a diagram is a lagging, usually stale, illustration of what the code says. If the architect cannot open a pull request against the infrastructure repository, someone else owns the architecture, and that someone will eventually stop asking.
 
 Michael Nygard's [Architecture Decision Records](https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions) belong in the same place: "We will keep ADRs in the project repository under doc/arch/adr-NNN.md." Without the rationale next to the code, he notes, a later engineer can only "blindly accept the decision" or "blindly change it." An architect who writes ADRs into the repo, and whose IaC commits reference them, is part of the implementation in the most durable way possible.
 
@@ -69,9 +69,9 @@ It does not mean taking the critical-path feature. Richards and Ford call that t
 It means something like this:
 
 - **Own the infrastructure as code.** Write the first version of the CDK stack or Terraform module yourself. Review every change to it. This is the piece of the build that most directly encodes your decisions.
-- **Take the hard module, not the big one.** The idempotency layer, the outbox pattern, the event schema versioning, the authorizer. Small in lines, large in consequence. Fowler's "really tricky stuff."
-- **Build the proof of concept before the decision, not after.** If the ADR says Step Functions over a custom orchestrator, the ADR should link to a working state machine you deployed.
-- **Sit in the review queue.** Not as a gate. As the person who reads the most pull requests on the team, because that is where you find out what the architecture actually costs.
+- **Take the hard module.** The idempotency layer, the outbox pattern, the event schema versioning, the authorizer. Small in lines, large in consequence. Fowler's "really tricky stuff."
+- **Build the proof of concept before the decision.** If the ADR says Step Functions over a custom orchestrator, the ADR should link to a working state machine you deployed.
+- **Sit in the review queue.** Be the person who reads the most pull requests on the team, because that is where you find out what the architecture actually costs. Gatekeeping is a different job.
 - **Carry a pager for what you designed.** You build it, you run it.
 
 Two or three of those, consistently, is enough. Zero of them is the problem.
@@ -80,9 +80,9 @@ Two or three of those, consistently, is enough. Zero of them is the problem.
 
 **Breadth versus depth.** Richards and Ford argue architects should "focus on technical breadth rather than technical depth." That is correct, and deep ownership of one module can trade away breadth. The resolution is to choose implementation work that forces breadth: IaC touches every service; the review queue touches every module.
 
-**The penthouse is also the job.** Hohpe's elevator goes both directions. An architect who only lives in the engine room fails to connect strategy to delivery. Brown concedes that being hands-on "doesn't necessarily mean that you have to get involved in the day-to-day coding tasks," and some weeks there is no time. The point is engagement over time, not a daily line count.
+**The penthouse is also the job.** Hohpe's elevator goes both directions. An architect who only lives in the engine room fails to connect strategy to delivery. Brown concedes that being hands-on "doesn't necessarily mean that you have to get involved in the day-to-day coding tasks," and some weeks there is no time. The measure is engagement over time.
 
-**Scale.** Past a certain organization size, one person cannot commit to every repository. The answer is not to stop, but to pick the repository whose decisions are hardest to reverse. Fowler's definition of architecture is "things that people perceive as hard to change." Go implement in the place that is hardest to change.
+**Scale.** Past a certain organization size, one person cannot commit to every repository. The answer is to pick the repository whose decisions are hardest to reverse. Fowler's definition of architecture is "things that people perceive as hard to change." Go implement in the place that is hardest to change.
 
 ## The test
 
