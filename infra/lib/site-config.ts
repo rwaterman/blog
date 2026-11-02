@@ -20,14 +20,10 @@ export interface SiteEnv {
 }
 
 export interface StageConfig extends SiteEnv {
-  /** AWS account that hosts this stage. */
   account: string;
-  /** Route 53 hosted zone that serves `zoneName` in `account`. */
   hostedZoneId: string;
   zoneName: string;
-  /** GitHub environment whose OIDC subject the deploy roles trust. */
   githubEnvironment: StageName;
-  /** Associate the distribution with the account's CloudFront web ACL. */
   webAcl: boolean;
 }
 

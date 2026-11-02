@@ -5,7 +5,13 @@ import { Match, Template } from 'aws-cdk-lib/assertions';
 import { defineStageStacks } from '../lib/stage-stacks';
 import { STAGES, StageName } from '../lib/site-config';
 
-function synthesize(stageName: StageName, context: Record<string, unknown> = {}) {
+interface SynthesizedStage {
+  shared: Template;
+  cert: Template;
+  site: Template;
+}
+
+function synthesize(stageName: StageName, context: Record<string, unknown> = {}): SynthesizedStage {
   const app = new cdk.App({ context });
   const stacks = defineStageStacks(app, STAGES[stageName]);
   return {

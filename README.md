@@ -174,8 +174,8 @@ flowchart LR
 The home region is `us-west-2`; everything that can live there does (bucket,
 distribution, roles, SSM). CloudFront requires its ACM certificate in `us-east-1`, so
 each environment gets a thin `BlogCert<Env>` stack there whose certificate is passed to the
-home-region site stack with CDK `crossRegionReferences`. DNS is the `rickwaterman.com`
-hosted zone of the stage's account.
+home-region site stack with CDK `crossRegionReferences`. DNS is the `rickwaterman.com` hosted
+zone in prod and the delegated `dev.rickwaterman.com` zone in dev, each in the stage's own account.
 
 The CDK app deploys one stage per invocation and requires `-c stage=dev` or `-c stage=prod`.
 It fails at synth when the credentials belong to a different account than the stage targets.

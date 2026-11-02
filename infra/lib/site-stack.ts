@@ -14,7 +14,6 @@ export interface SiteStackProps extends cdk.StackProps {
   stage: StageConfig;
   oidcProvider: iam.IOpenIdConnectProvider;
   certificate: acm.ICertificate;
-  /** Attach the domain names and Route 53 records. False serves the distribution on its cloudfront.net domain only. */
   attachDomains: boolean;
 }
 
@@ -42,7 +41,6 @@ export class SiteStack extends cdk.Stack {
       code: cloudfront.FunctionCode.fromInline(DIRECTORY_INDEX_FUNCTION),
     });
 
-    // The account baseline (aws-orgs) publishes the CloudFront web ACL ARN in prod only.
     const webAclId = stage.webAcl
       ? ssm.StringParameter.valueForStringParameter(this, WEB_ACL_ARN_PARAMETER)
       : undefined;
@@ -79,8 +77,8 @@ export class SiteStack extends cdk.Stack {
       new route53.AaaaRecord(this, 'AliasAAAA', { zone, recordName: stage.domainName, target: aliasTarget });
     }
 
-    // Environment-scoped CI role: only this stage's GitHub environment can assume it, and it can only touch
-    // this env's bucket, distribution, and SSM parameters.
+    // Environment-scoped CI role: only this stage's GitHub environment can assume it, and
+    // it can only touch this env's bucket, distribution, and SSM parameters.
     const contentRole = new iam.Role(this, 'ContentDeployRole', {
       roleName: `blog-content-${stage.envName}`,
       description: `GitHub Actions role to deploy ${stage.envName} blog content`,
