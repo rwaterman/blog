@@ -1,50 +1,81 @@
-function requireEnv(name: string): string {
-  const value = process.env[name];
-  if (!value) {
-    throw new Error(`${name} must be set`);
-  }
-  return value;
-}
+import * as cdk from 'aws-cdk-lib';
 
-export const ACCOUNT = process.env.CDK_DEFAULT_ACCOUNT ?? requireEnv('AWS_ACCOUNT_ID');
 export const REGION = 'us-west-2';
 // CloudFront certificates must live in us-east-1.
 export const EDGE_REGION = 'us-east-1';
 
-export const HOSTED_ZONE_ID = requireEnv('HOSTED_ZONE_ID');
-export const ZONE_NAME = 'rickwaterman.com';
-
 export const GITHUB_REPO = 'rwaterman/blog';
 
-/**
- * The GitHub Actions OIDC provider is an account-level singleton (one per URL per
- * AWS account). It is already created by the `website` repo's WebsiteShared stack,
- * so we import it by ARN here — creating a second one would be rejected.
- */
-export const OIDC_PROVIDER_ARN = `arn:aws:iam::${ACCOUNT}:oidc-provider/token.actions.githubusercontent.com`;
+export const WEB_ACL_ARN_PARAMETER = '/account/cloudfront-webacl-arn';
+
+export type StageName = 'dev' | 'prod';
 
 export interface SiteEnv {
   /** PascalCase suffix used in stack ids, e.g. "Dev" -> BlogSiteDev. */
   id: string;
   /** Lowercase environment key used in role names and SSM paths, e.g. "dev". */
-  envName: string;
-  /** Primary domain served, e.g. "blog-dev.rickwaterman.com". */
+  envName: StageName;
+  /** Primary domain served, e.g. "blog.dev.rickwaterman.com". */
   domainName: string;
-  /** Git branch whose pushes deploy this environment. */
-  branch: string;
 }
 
-export const SITE_ENVS: SiteEnv[] = [
-  {
+export interface StageConfig extends SiteEnv {
+  account: string;
+  hostedZoneId: string;
+  zoneName: string;
+  githubEnvironment: StageName;
+  webAcl: boolean;
+}
+
+export const STAGES: Record<StageName, StageConfig> = {
+  dev: {
     id: 'Dev',
     envName: 'dev',
-    domainName: 'blog-dev.rickwaterman.com',
-    branch: 'develop',
+    account: '690084476262',
+    hostedZoneId: 'Z02783752H850YJ2Z0LST',
+    zoneName: 'dev.rickwaterman.com',
+    domainName: 'blog.dev.rickwaterman.com',
+    githubEnvironment: 'dev',
+    webAcl: false,
   },
-  {
+  prod: {
     id: 'Prod',
     envName: 'prod',
+    account: '582621605246',
+    hostedZoneId: 'Z050080263SGEDSJA265',
+    zoneName: 'rickwaterman.com',
     domainName: 'blog.rickwaterman.com',
-    branch: 'main',
+    githubEnvironment: 'prod',
+    webAcl: true,
   },
-];
+};
+
+function isStageName(value: unknown): value is StageName {
+  return typeof value === 'string' && Object.hasOwn(STAGES, value);
+}
+
+export function resolveStage(app: cdk.App, env: NodeJS.ProcessEnv): StageConfig {
+  const requested: unknown = app.node.tryGetContext('stage');
+  if (!isStageName(requested)) {
+    throw new Error(`Missing or unknown stage (${String(requested)}). Pass -c stage=dev or -c stage=prod`);
+  }
+  const stage = STAGES[requested];
+  const credentialsAccount = env.CDK_DEFAULT_ACCOUNT;
+  if (!credentialsAccount) {
+    throw new Error(
+      `Stage ${requested} targets ${stage.account}, but CDK_DEFAULT_ACCOUNT is not set; run through the cdk CLI with credentials`,
+    );
+  }
+  if (credentialsAccount !== stage.account) {
+    throw new Error(`Stage ${requested} targets ${stage.account}, but credentials are for ${credentialsAccount}`);
+  }
+  return stage;
+}
+
+export function resolveAttachDomains(app: cdk.App): boolean {
+  return String(app.node.tryGetContext('attachDomains')) !== 'false';
+}
+
+export function oidcProviderArn(account: string): string {
+  return `arn:aws:iam::${account}:oidc-provider/token.actions.githubusercontent.com`;
+}
