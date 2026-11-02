@@ -5,15 +5,17 @@ personal blog: essays on cloud architecture, AWS, and engineering leadership. Bu
 [Hugo](https://gohugo.io/) and the [Congo](https://jpanther.github.io/congo/) theme
 (installed as a Hugo Module), deployed to S3 + CloudFront with AWS CDK. It is a sibling of
 [`website`](https://github.com/rwaterman/website) and
-[`notes`](https://github.com/rwaterman/notes), which share the same deployment pattern and
-account-wide infrastructure.
+[`notes`](https://github.com/rwaterman/notes), which share the same deployment pattern. Each
+environment deploys into its own AWS account (`rwaterman-dev`, `rwaterman-prod`); the
+account-wide infrastructure (GitHub OIDC provider, hosted zones, CloudFront web ACL) lives in
+the account baselines of the `aws-orgs` repo.
 
 ## Requirements
 
 - Hugo **extended** — CI pins `0.165.0` in `.github/workflows/deploy.yml`; `brew install hugo`
 - Go — `go.mod` declares `1.26.4`; CI uses `go-version-file: go.mod`; `brew install go`
 - Node.js + npm — infra deploy uses `npm ci` / `npx cdk`; CI uses Node `22`
-- AWS CLI + CDK bootstrap in `us-west-2` and `us-east-1` for infra work
+- AWS CLI + CDK bootstrap in `us-west-2` and `us-east-1` of each target account for infra work
 
 ## Develop
 
@@ -148,10 +150,12 @@ archetypes/                 default.md, posts.md (front matter + ai-disclosure s
 go.mod, go.sum              pins Congo v2 as a Hugo Module
 infra/                      AWS CDK app (TypeScript)
   bin/blog.ts
-  lib/shared-stack.ts     blog-infra-deploy role, imports shared OIDC provider (us-west-2)
+  lib/shared-stack.ts     blog-infra-deploy role, imports the account's OIDC provider (us-west-2)
   lib/cert-stack.ts       per-env ACM certificate (us-east-1)
   lib/site-stack.ts       one environment (us-west-2)
-  lib/site-config.ts        SITE_ENVS, account/region/zone
+  lib/site-config.ts      STAGES (account, zone, domain per stage), resolveStage()
+  lib/stage-stacks.ts     defines the selected stage's stacks
+  test/                   stage-config and site-stack tests (node:test)
 .github/workflows/
   deploy.yml                build + publish content
   infra.yml                 cdk deploy
@@ -164,65 +168,77 @@ flowchart LR
   GH[GitHub Actions<br/>Go + Hugo extended, OIDC] -->|hugo build, s3 sync, invalidate| S3[(S3 bucket<br/>private, OAC)]
   U[Browser] --> R53[Route53<br/>A/AAAA alias] --> CF[CloudFront<br/>ACM cert + rewrite Function]
   CF --> S3
-  WAF[Shared WAF WebACL<br/>owned by website repo] -. associated .-> CF
+  WAF[Account WAF WebACL<br/>prod only, owned by aws-orgs] -. associated .-> CF
 ```
 
 The home region is `us-west-2`; everything that can live there does (bucket,
 distribution, roles, SSM). CloudFront requires its ACM certificate in `us-east-1`, so
 each environment gets a thin `BlogCert<Env>` stack there whose certificate is passed to the
-home-region site stack with CDK `crossRegionReferences`. DNS is the `rickwaterman.com`
-hosted zone.
+home-region site stack with CDK `crossRegionReferences`. DNS is the `rickwaterman.com` hosted
+zone in prod and the delegated `dev.rickwaterman.com` zone in dev, each in the stage's own account.
+
+The CDK app deploys one stage per invocation and requires `-c stage=dev` or `-c stage=prod`.
+It fails at synth when the credentials belong to a different account than the stage targets.
 
 | Stack | Region | Contents |
 | --- | --- | --- |
-| `BlogShared` | us-west-2 | `blog-infra-deploy` role (imports the website repo's OIDC provider) |
+| `BlogShared` | us-west-2 | `blog-infra-deploy` role (imports the account's OIDC provider) |
 | `BlogCert<Env>` | us-east-1 | That environment's DNS-validated ACM certificate |
 | `BlogSite<Env>` | us-west-2 | Bucket, distribution, DNS, content role, SSM params |
 
 ### `BlogShared`
 
-Imports the account-wide GitHub OIDC provider (created once by the `website` repo's
-`WebsiteShared` stack) and creates the `blog-infra-deploy` role that `infra.yml` assumes
-from `develop`. The role has no service permissions of its own — it can only assume the
-CDK bootstrap roles in both regions.
+Imports the account's GitHub OIDC provider (created by the account baseline in the
+`aws-orgs` repo) and creates the `blog-infra-deploy` role that `infra.yml` assumes. The
+role trusts only the GitHub environment of its stage (`repo:rwaterman/blog:environment:<stage>`).
+It has no service permissions of its own — it can only assume the CDK bootstrap roles in
+both regions.
 
 ### `BlogSite<Env>`
 
-| Env | Stack | Domain | Deploys from | Content role |
-| --- | --- | --- | --- | --- |
-| dev | `BlogSiteDev` | `blog-dev.rickwaterman.com` | `develop` | `blog-content-dev` |
-| prod | `BlogSiteProd` | `blog.rickwaterman.com` | `main` | `blog-content-prod` |
+| Env | AWS account | Stack | Domain | GitHub environment (branch) | Content role |
+| --- | --- | --- | --- | --- | --- |
+| dev | `rwaterman-dev` (`690084476262`) | `BlogSiteDev` | `blog.dev.rickwaterman.com` | `dev` (`develop`) | `blog-content-dev` |
+| prod | `rwaterman-prod` (`582621605246`) | `BlogSiteProd` | `blog.rickwaterman.com` | `prod` (`main`) | `blog-content-prod` |
 
 Each environment stack creates: a private, encrypted S3 bucket (prod: `RETAIN`, dev:
 destroy + auto-empty); a CloudFront distribution with Origin Access Control, a
 viewer-request CloudFront Function for Hugo's directory-index URLs, and 403/404 mapped to
-`/404.html`; Route53 A/AAAA alias records; a
-branch-scoped OIDC role that may only write to that environment's bucket and invalidate
+`/404.html`; Route53 A/AAAA alias records; an
+environment-scoped OIDC role that may only write to that environment's bucket and invalidate
 its distribution; and SSM parameters `/blog/<env>/bucket-name` and
 `/blog/<env>/distribution-id` that the deploy workflow resolves at run time.
 
-The distribution attaches the shared CloudFront WebACL (geo-block of sanctioned
+In prod, the distribution attaches the account's CloudFront WebACL (geo-block of sanctioned
 countries, per-IP rate limit, AWS IP-reputation list) by reading its ARN from SSM
-`/website/shared/cloudfront-webacl-arn` (us-west-2) as a CloudFormation dynamic reference resolved at
-deployment time, so WAF rules are defined in one place for all three sites.
+`/account/cloudfront-webacl-arn` (us-west-2) as a CloudFormation dynamic reference resolved at
+deployment time, so WAF rules are defined in one place for all three sites. Dev has no web
+ACL.
+
+Pass `-c attachDomains=false` to deploy a distribution with its certificate but without the
+domain names and Route 53 records (used while moving a domain between accounts). It
+defaults to attaching them.
 
 ## CI/CD
 
-Both workflows use OIDC (`id-token: write`); no long-lived AWS keys exist.
+Both workflows use OIDC (`id-token: write`); no long-lived AWS keys exist. Each job runs in the
+GitHub environment of its target (`dev` deploys from `develop`, `prod` from `main`), and that
+environment's variable `AWS_ACCOUNT_ID` selects the AWS account. The OIDC trust policies match
+the environment subject, so a job in one environment cannot assume the other account's roles.
 
 - **`deploy.yml`** — on push to `develop` (→ dev) or `main` (→ prod), or
   `workflow_dispatch` with an `env` choice (dispatch from `develop` for `dev`, `main` for
-  `prod`, to match the branch-scoped OIDC trust policy). Checks out full history (for
+  `prod`, to match the environment's deployment branch rule). Checks out full history (for
   git-derived `Lastmod`), installs Go (from `go.mod`) and Hugo extended (pinned
   `HUGO_VERSION`), fetches the Congo module, runs
   `hugo --gc --minify --environment <production|development> --baseURL https://<host>/`,
   writes a `Disallow: /` `robots.txt` on dev, assumes `blog-content-<env>`, syncs
   `public/` to S3 with `must-revalidate` cache headers, then invalidates `/*`. Needs
-  secret `AWS_ACCOUNT_ID`.
-- **`infra.yml`** — on push to `develop` touching `infra/**` or
-  `.github/workflows/infra.yml`, plus `workflow_dispatch`. Assumes `blog-infra-deploy` and
-  runs `cdk deploy --all` — every stack, dev **and** prod. Infra has no `main` path; only
-  content promotion follows `main`. Needs secrets `AWS_ACCOUNT_ID` and `HOSTED_ZONE_ID`.
+  the environment variable `AWS_ACCOUNT_ID`.
+- **`infra.yml`** — on push to `develop` (→ dev) or `main` (→ prod) touching `infra/**` or
+  `.github/workflows/infra.yml`, plus `workflow_dispatch`. Runs `npm test`, assumes
+  `blog-infra-deploy` and runs `cdk deploy --all -c stage=<dev|prod>` for that one stage.
+  Needs the environment variable `AWS_ACCOUNT_ID`.
 
 Unlike the Node-based siblings, the build needs Go plus a network fetch of the Hugo
 Module; `go.mod`/`go.sum` pin the theme so CI is reproducible.
@@ -231,12 +247,17 @@ Branching follows git flow: feature branches → `develop` (dev), releases → `
 
 ### First-time / local infra deploy
 
-`blog-infra-deploy` is created by `BlogShared`, so the very first deploy runs locally
-with admin credentials, after the `website` repo's `WebsiteShared` stack exists:
-
-Both regions must be CDK-bootstrapped.
+`blog-infra-deploy` is created by `BlogShared`, so the very first deploy of a stage runs
+locally with admin credentials for that stage's account, after the account baseline from the
+`aws-orgs` repo exists (OIDC provider, hosted zone and, in prod, the web ACL parameter).
+Both regions of the account must be CDK-bootstrapped.
 
 ```sh
 cd infra && npm ci
-AWS_ACCOUNT_ID=<account> HOSTED_ZONE_ID=<zoneId> npx cdk deploy --all --require-approval never
+npm test
+npx cdk deploy --all -c stage=dev --profile rwaterman-dev --require-approval never
+npx cdk deploy --all -c stage=prod --profile rwaterman-prod --require-approval never
 ```
+
+A stage deployed with credentials from another account fails at synth with
+`Stage <stage> targets <account>, but credentials are for <account>`.
